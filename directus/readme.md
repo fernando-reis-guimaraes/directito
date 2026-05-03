@@ -1,102 +1,120 @@
-<p align="center"><img alt="Directus Logo" src="https://user-images.githubusercontent.com/522079/158864859-0fbeae62-9d7a-4619-b35e-f8fa5f68e0c8.png"></p>
+# uma-directus
 
----
+Directus fork used by UMA projects.
 
-> [!NOTE]\
-> We’re planning an update to the Directus source code license and would love your feedback.\
-> Take a look at our community post and share your thoughts!\
-> [🔗 Directus License Revision: Community Feedback Requested](https://community.directus.io/t/directus-license-revision-community-feedback-requested/2125)
+This fork keeps the upstream Directus codebase as close as possible to the official project, with a small authentication
+patch that allows local email/password login as a fallback for users configured with an external authentication
+provider.
 
----
+## Docker image
 
-## 🐰 Introduction
+Published image:
 
-Directus is a real-time API and App dashboard for managing SQL database content.
+```text
+docker.io/umappsnet/uma-directus
+```
 
-- **REST & GraphQL API.** Instantly layers a blazingly fast Node.js API on top of any SQL database.
-- **Manage Pure SQL.** Works with new or existing SQL databases, no migration required.
-- **Choose your Database.** Supports PostgreSQL, MySQL, SQLite, OracleDB, CockroachDB, MariaDB, and MS-SQL.
-- **On-Prem or Cloud.** Run locally, install on-premises, or use our
-  [self-service Cloud service](https://directus.io/pricing).
-- **Completely Extensible.** Built to white-label, it is easy to customize our modular platform.
-- **A Modern Dashboard.** Our no-code Vue.js app is safe and intuitive for non-technical users, no training required.
+## Authentication patch
 
-**[Learn more about Directus](https://directus.io)** • **[Documentation](https://docs.directus.io)**
+This fork supports:
 
-<br />
+```text
+one external provider + local email/password fallback
+```
 
-## 🚀 Directus Cloud
+Example:
 
-[Directus Cloud](https://directus.io/pricing) allows you to create projects, hosted by the Directus team, from
-$15/month.
+```text
+provider = google
+external_identifier = user@example.com
+password = valid local password hash
+```
 
-- A self-service dashboard to create and monitor all your projects in one place.
-- Everything you need: Directus, database, storage, auto-scaling, and a global CDN.
-- Select your desired region and provision a new project in ~90 seconds.
+With the environment variable below enabled, the same user can log in with an external provider and also with local
+email/password:
 
-**[Create a Directus Cloud Project](https://directus.cloud)**
+```bash
+AUTH_ALLOW_LOCAL_PASSWORD_FOR_EXTERNAL_USERS=true
+```
 
-<br />
+This does not allow multiple external providers for the same user. For example, a user configured with Google is not
+allowed to log in through Microsoft.
 
-## ⚡ One-Click Deployment Options
+## Release flow
 
-Deploy Directus with a single click via Railway—complete infrastructure without the complexity.
+The Docker image is built and pushed by GitHub Actions when a Git tag matching `v[0-9]*` is pushed.
 
-### Deploy on Railway
+### 1. Commit changes
 
-Fully provisioned — one click to deploy Directus with PostgreSQL database, Redis cache, and S3-compatible bucket
-storage, all connected via Railway's private network for secure, zero-egress communication.
+```bash
+git status
+git add .
+git commit -m "Describe the change"
+```
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/directus-official?referralCode=b2RDZT&utm_medium=integration&utm_source=template&utm_campaign=generic)
+### 2. Create a release tag
 
-<br />
+Use the upstream Directus version plus a fork suffix.
 
-## 🤔 Community Help
+Example:
 
-[The Directus Documentation](https://docs.directus.io) is a great place to start, or explore these other channels:
+```bash
+git tag v11.17.4-uma.1
+```
 
-- [Community](https://community.directus.io) (Questions, Discussions)
-- [Discord](https://directus.chat) (Live Chat)
-- [GitHub Issues](https://github.com/directus/directus/issues) (Report Bugs)
-- [Roadmap](https://roadmap.directus.io/) (Roadmap & Feature Requests)
-- [Twitter](https://twitter.com/directus) (Latest News)
-- [YouTube](https://www.youtube.com/c/DirectusVideos/featured) (Video Tutorials)
+### 3. Push the branch
 
-<br />
+```bash
+git push origin HEAD
+```
 
-## ❤️ Contributing & Sponsoring
+### 4. Push the tag
 
-Please read our [Contributing Guide](./contributing.md) before submitting Pull Requests.
+```bash
+git push origin v11.17.4-uma.1
+```
 
-All security vulnerabilities should be reported in accordance with our
-[Security Policy](https://docs.directus.io/contributing/introduction/#reporting-security-vulnerabilities).
+GitHub Actions will then build and push the Docker image.
 
-Directus is made possible with support from our passionate core team, talented contributors, and amazing
-[GitHub Sponsors](https://github.com/sponsors/directus). Thank you all!
+## Published tags
 
-<br />
+For a tag like:
 
-## 📄 Understanding Our License
+```text
+v11.17.4-uma.1
+```
 
-Directus is licensed under [the Business Source License (BSL) 1.1](./license) with a permissive additional use grant.
-For most users, it operates just like open source! Here's what that means for you:
+Expected Docker image tag:
 
-### Free for Most Users
+```text
+docker.io/umappsnet/uma-directus:11.17.4-uma.1
+```
 
-If your organization has less than $5M in annual revenue and/or funding combined, you can use Directus freely in any way
-you'd like. Build that side project, launch your startup, or experiment with the platform — no strings attached.
+Because this is a prerelease-style semver tag, the workflow may also publish:
 
-### Enterprise Usage
+```text
+docker.io/umappsnet/uma-directus:canary
+```
 
-For larger organizations (>$5M in annual revenue/funding) using Directus in production, we require a commercial license.
-This model helps us maintain a sustainable balance: keeping Directus free for the majority of our community while
-ensuring larger organizations who benefit from the platform contribute to its continued development.
+Use the explicit version tag in production.
 
-### Why This Approach?
+## GitHub secrets
 
-We believe in making powerful data tools accessible to everyone. This license lets us:
+The release workflow requires these repository secrets:
 
-- Keep Directus free for individuals, startups, and smaller companies
-- Maintain active development and strong support
-- Continue improving the platform for everyone
-- Stay sustainable as an independent project
+```text
+DOCKERHUB_USERNAME
+DOCKERHUB_PASSWORD
+```
+
+`DOCKERHUB_PASSWORD` should be a Docker Hub access token, not the account password.
+
+## Production usage
+
+Pin the image version explicitly:
+
+```yaml
+image: umappsnet/uma-directus:11.17.4-uma.1
+```
+
+Avoid using `latest` in production.
