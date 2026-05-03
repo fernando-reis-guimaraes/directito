@@ -33,6 +33,18 @@ export let SERVER_ONLINE = true;
 
 const env = useEnv();
 const logger = useLogger();
+const forkWarningBanner = String.raw`
+==============================================================
+ _   _ __  __    _        _____ ___  ____  _  __
+| | | |  \/  |  / \      |  ___/ _ \|  _ \| |/ /
+| | | | |\/| | / _ \     | |_ | | | | |_) | ' /
+| |_| | |  | |/ ___ \    |  _|| |_| |  _ <| . \
+ \___/|_|  |_/_/   \_\   |_|   \___/|_| \_\_|\_\
+
+You are running a forked version of Directus.
+Source code: github.com/ultra-mega-apps/uma-directus
+==============================================================
+`.trim();
 
 export async function createServer(): Promise<http.Server> {
 	const server = http.createServer(await createApp());
@@ -188,6 +200,8 @@ export async function startServer(): Promise<void> {
 			logger.info(
 				`Server started at ${listenOptions.port ? `${protocol}://${getAddress(server)}` : getAddress(server)}`,
 			);
+
+			logger.warn(`\n${forkWarningBanner}\n`);
 
 			process.send?.('ready');
 
