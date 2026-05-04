@@ -17,7 +17,6 @@ import jwt from 'jsonwebtoken';
 import { isEmpty } from 'lodash-es';
 import type { StringValue } from 'ms';
 import { clearSystemCache } from '../cache.js';
-import { DEFAULT_AUTH_PROVIDER } from '../constants.js';
 import getDatabase from '../database/index.js';
 import { useLogger } from '../logger/index.js';
 import { validateRemainingAdminUsers } from '../permissions/modules/validate-remaining-admin/validate-remaining-admin-users.js';
@@ -568,11 +567,6 @@ export class UsersService extends ItemsService {
 		const user = await this.getUserByEmail(email);
 
 		if (user?.status !== 'active') {
-			await stall(STALL_TIME, timeStart);
-			throw new ForbiddenError();
-		}
-
-		if (user.provider !== DEFAULT_AUTH_PROVIDER) {
 			await stall(STALL_TIME, timeStart);
 			throw new ForbiddenError();
 		}
