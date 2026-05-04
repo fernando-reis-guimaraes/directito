@@ -2,4 +2,4 @@
 '@directus/api': major
 ---
 
-Local email/password login is now always allowed for users registered with an external OAuth provider, as long as the user has a password set. The `AUTH_ALLOW_LOCAL_PASSWORD_FOR_EXTERNAL_USERS` environment variable is no longer required.
+Added support for local email/password login for users registered with an external OAuth provider. Users who have both a password and an external provider (e.g. Google) configured can authenticate via the default local provider using their email and password.
