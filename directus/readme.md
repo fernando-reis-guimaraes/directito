@@ -30,12 +30,8 @@ external_identifier = user@example.com
 password = valid local password hash
 ```
 
-With the environment variable below enabled, the same user can log in with an external provider and also with local
-email/password:
-
-```bash
-AUTH_ALLOW_LOCAL_PASSWORD_FOR_EXTERNAL_USERS=true
-```
+The same user can log in with an external provider and also with local email/password, as long as the user record has
+a password set. No additional environment variable is required to enable this behaviour.
 
 This does not allow multiple external providers for the same user. For example, a user configured with Google is not
 allowed to log in through Microsoft.

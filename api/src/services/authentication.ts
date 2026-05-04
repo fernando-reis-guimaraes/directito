@@ -123,10 +123,7 @@ export class AuthenticationService {
 			},
 		);
 
-		const allowLocalPasswordForExternalUsers =
-			providerName === DEFAULT_AUTH_PROVIDER &&
-			!!user?.password &&
-			String(env['AUTH_ALLOW_LOCAL_PASSWORD_FOR_EXTERNAL_USERS'] ?? '').toLowerCase() === 'true';
+		const allowLocalPasswordForExternalUsers = providerName === DEFAULT_AUTH_PROVIDER && !!user?.password;
 
 		const providerMismatch = user?.provider !== providerName;
 		const providerMismatchAllowed = providerMismatch && allowLocalPasswordForExternalUsers;
