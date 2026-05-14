@@ -309,7 +309,7 @@ describe('Integration Tests', () => {
 		});
 
 		describe('requestPasswordReset', () => {
-			it('should throw ForbiddenError for external provider users', async () => {
+			it('should send reset email for external provider users', async () => {
 				tracker.on.select('directus_users').response({
 					id: 'user-id-ext',
 					role: 'role-id',
@@ -326,9 +326,9 @@ describe('Integration Tests', () => {
 					schema,
 				});
 
-				await expect(service.requestPasswordReset('ext@example.com', null)).rejects.toThrow(ForbiddenError);
+				await service.requestPasswordReset('ext@example.com', null);
 
-				expect(mailService.send).not.toHaveBeenCalled();
+				expect(mailService.send).toHaveBeenCalledTimes(1);
 			});
 
 			it('should send reset email for default provider users', async () => {
