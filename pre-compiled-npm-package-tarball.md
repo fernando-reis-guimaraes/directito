@@ -43,6 +43,12 @@ cd ..
 ls -lh tarball/*.tgz
 ```
 
+Instead of running the build and pack commands manually, you may prefer to run the helper script:
+
+```bash
+./scripts/build-and-pack-npm-package.sh
+```
+
 Then, in the consumer repository:
 
 ```bash
