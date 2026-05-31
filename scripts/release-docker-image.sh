@@ -10,7 +10,7 @@ remote_url="$(git remote get-url origin)"
 docker_image="docker.io/umappsnet/uma-directus:${image_tag}"
 
 if [ -z "${branch}" ]; then
-  echo "Error: detached HEAD. Checkout a branch before releasing."
+  echo "Error: detached HEAD. Checkout a branch before releasing." >&2
   exit 1
 fi
 
@@ -49,14 +49,13 @@ fi
 echo
 echo "Proceeding..."
 
-if ! git diff --quiet || ! git diff --cached --quiet; then
-  echo
-  echo "Uncommitted changes found. Creating commit."
-  git add .
-  git commit -m "Release ${tag}"
-else
+if [ -z "$(git status --porcelain=v1 --untracked-files=normal)" ]; then
   echo
   echo "No uncommitted changes found."
+else
+  echo
+  echo "Uncommitted changes found. Aborting release. Please commit or stash changes before releasing." >&2
+  exit 1
 fi
 
 echo
