@@ -49,8 +49,11 @@ EOF
 
 FROM node:${NODE_VERSION}-alpine AS runtime
 
+# No PM2, we are using CapRover or Kubernetes
+# RUN npm install --global \
+# 	pm2@5 \
+# 	corepack@latest # Remove again once corepack >= 0.31 made it into base image
 RUN npm install --global \
-	pm2@5 \
 	corepack@latest # Remove again once corepack >= 0.31 made it into base image
 
 USER node
@@ -63,12 +66,16 @@ ENV \
 	NODE_ENV="production" \
 	NPM_CONFIG_UPDATE_NOTIFIER="false"
 
-COPY --from=builder --chown=node:node /directus/ecosystem.config.cjs .
+# No PM2, we are using CapRover or Kubernetes
+# COPY --from=builder --chown=node:node /directus/ecosystem.config.cjs .
 COPY --from=builder --chown=node:node /directus/dist .
 
 EXPOSE 8055
 
-CMD : \
-	&& node cli.js bootstrap \
-	&& pm2-runtime start ecosystem.config.cjs \
-	;
+# No PM2, we are using CapRover or Kubernetes
+# CMD : \
+# 	&& node cli.js bootstrap \
+# 	&& pm2-runtime start ecosystem.config.cjs \
+#;
+
+CMD ["sh", "-c", "node cli.js bootstrap && exec node cli.js start"]
