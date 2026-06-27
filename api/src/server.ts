@@ -33,6 +33,7 @@ export let SERVER_ONLINE = true;
 
 const env = useEnv();
 const logger = useLogger();
+
 const forkWarningBanner = String.raw`
 ==============================================================
  _   _ __  __    _        _____ ___  ____  _  __
