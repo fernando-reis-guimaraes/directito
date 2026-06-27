@@ -1,10 +1,9 @@
 # uma-directus
 
-Directus fork used by UMA projects.
+Directus 11 fork used by UMA projects.
 
-This fork keeps the upstream Directus codebase as close as possible to the official project, with a small authentication
-patch that allows local email/password login as a fallback for users configured with an external authentication
-provider.
+This fork keeps the upstream Directus codebase as close as possible to the official project, with small targeted patches
+needed by UMA deployments.
 
 ## Docker image
 
@@ -14,7 +13,23 @@ Published image:
 docker.io/umappsnet/uma-directus
 ```
 
-## Authentication patch
+The release workflow publishes a multi-architecture image for:
+
+```text
+linux/amd64
+linux/arm64
+```
+
+This allows the same Docker image tag to run on both:
+
+```text
+Ubuntu x86_64 servers
+Apple Silicon / MacBook M4 local CapRover setups
+```
+
+## Patches
+
+### Authentication patch
 
 This fork supports:
 
@@ -30,15 +45,111 @@ external_identifier = user@example.com
 password = valid local password hash
 ```
 
-The same user can log in with an external provider and also with local email/password, as long as the user record has
-a password set. No additional environment variable is required to enable this behaviour.
+The same user can log in with an external provider and also with local email/password, as long as the user record has a
+password set. No additional environment variable is required to enable this behaviour.
 
 This does not allow multiple external providers for the same user. For example, a user configured with Google is not
 allowed to log in through Microsoft.
 
+### TUS upload retry patch
+
+This fork enables retry support for Directus Studio resumable uploads using `tus-js-client`.
+
+By default, failed TUS chunk uploads are retried with exponential delays:
+
+```text
+2000,4000,8000,16000,32000,64000
+```
+
+This means retries after:
+
+```text
+2s, 4s, 8s, 16s, 32s, 64s
+```
+
+The retry sequence is reset by `tus-js-client` after upload progress is accepted by the server.
+
+The retry delays can be customized with:
+
+```env
+TUS_RETRY_DELAYS=2000,4000,8000,16000,32000,64000
+```
+
+Retries are only allowed for transient upload failures, such as network interruption, timeout, locked upload, rate
+limiting, or server-side 5xx errors.
+
+Client-side errors such as unauthorized, forbidden, not found, invalid payload, or file too large are not retried.
+
+## Local Docker build
+
+Use the local build script from the repository root:
+
+```bash
+./scripts/build-docker-image-local.sh uma-directus
+```
+
+For a normal local validation build, answer `N` to push and type:
+
+```text
+BUILD
+```
+
+This builds the configured platforms into the Buildx cache.
+
+If the local build script supports local loading, type:
+
+```text
+LOAD
+```
+
+This builds only the local platform and loads the image into the local Docker image store.
+
+Expected local platforms:
+
+```text
+MacBook M4 / Apple Silicon: linux/arm64
+Ubuntu x86_64: linux/amd64
+```
+
+You can also force a platform manually:
+
+```bash
+PLATFORMS=linux/arm64 ./scripts/build-docker-image-local.sh uma-directus
+```
+
+or:
+
+```bash
+PLATFORMS=linux/amd64 ./scripts/build-docker-image-local.sh uma-directus
+```
+
+## Dockerfile validation
+
+The Dockerfile builds the Directus workspace and production image.
+
+It runs:
+
+```text
+pnpm install --recursive --offline --frozen-lockfile
+pnpm run build
+pnpm --filter directus deploy --legacy --prod dist
+```
+
+This validates dependency installation, TypeScript/build output, Studio build, and Directus package deployment.
+
+It does not run the full test suite unless explicit test commands are added to the Dockerfile.
+
 ## Release flow
 
 The Docker image is built and pushed by GitHub Actions when a Git tag matching `v[0-9]*` is pushed.
+
+The preferred release helper is:
+
+```bash
+./scripts/release-docker-image.sh
+```
+
+The release script expects a clean working tree. Commit changes before running it.
 
 ### 1. Commit changes
 
@@ -48,26 +159,19 @@ git add .
 git commit -m "Describe the change"
 ```
 
-### 2. Create a release tag
-
-Use the upstream Directus version plus a fork suffix.
-
-Example:
+### 2. Run the release script
 
 ```bash
-git tag v11.17.4-uma.1
+./scripts/release-docker-image.sh
 ```
 
-### 3. Push the branch
+The script will:
 
-```bash
-git push origin HEAD
-```
-
-### 4. Push the tag
-
-```bash
-git push origin v11.17.4-uma.1
+```text
+1. Push the current branch
+2. Create a release tag
+3. Push the release tag
+4. Trigger GitHub Actions
 ```
 
 GitHub Actions will then build and push the Docker image.
@@ -94,12 +198,15 @@ docker.io/umappsnet/uma-directus:canary
 
 Use the explicit version tag in production.
 
-## GitHub secrets
+## GitHub configuration
 
-The release workflow requires these repository secrets:
+The release workflow requires:
 
 ```text
+Repository variable:
 DOCKERHUB_USERNAME
+
+Repository secret:
 DOCKERHUB_PASSWORD
 ```
 
@@ -114,3 +221,12 @@ image: umappsnet/uma-directus:11.17.4-uma.1
 ```
 
 Avoid using `latest` in production.
+
+Example TUS upload configuration:
+
+```env
+TUS_ENABLED=true
+TUS_CHUNK_SIZE=16mb
+TUS_UPLOAD_EXPIRATION=168h
+TUS_RETRY_DELAYS=2000,4000,8000,16000,32000,64000
+```
