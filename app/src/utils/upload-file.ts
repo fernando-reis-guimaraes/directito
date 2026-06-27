@@ -113,6 +113,7 @@ export async function uploadFile(
 				},
 				onShouldRetry(error, retryAttempt) {
 					const shouldRetry = shouldRetryTusUpload(error);
+					const status = getTusErrorStatus(error);
 
 					if (shouldRetry) {
 						const retryDelays = server.info.uploads?.retryDelays ?? DEFAULT_TUS_RETRY_DELAYS;
@@ -120,15 +121,15 @@ export async function uploadFile(
 						// eslint-disable-next-line no-console
 						console.warn('[Directus] TUS upload failed. Retrying chunk upload.', {
 							fileName: file.name,
-							status: getTusErrorStatus(error),
+							status,
 							retryAttempt: retryAttempt + 1,
 							retryDelay: retryDelays[retryAttempt] ?? null,
 						});
 					} else {
 						// eslint-disable-next-line no-console
-						console.error('[Directus] TUS upload failed. Aborting chunk upload.', {
+						console.error('[Directus] TUS upload failed. Not retrying chunk upload.', {
 							fileName: file.name,
-							status: getTusErrorStatus(error),
+							status,
 							retryAttempt: retryAttempt + 1,
 						});
 					}
