@@ -234,13 +234,19 @@ describe('Integration Tests', () => {
 				);
 			});
 
-			it('should throw InvalidCredentialsError when user provider does not match', async () => {
-				tracker.on.select('directus_users').responseOnce([{ ...mockUser, provider: 'ldap' }]);
-
-				await expect(
-					service.login('default', { email: 'john@example.com', password: 'password' }),
-				).rejects.toBeInstanceOf(InvalidCredentialsError);
-			});
+			// UMA fork note: local email/password login is intentionally allowed
+			// when the user has a local password, even if user.provider is external
+			// or misconfigured. Upstream expected this case to fail on provider
+			// mismatch. The old test is kept commented to make upstream pulls easier
+			// to review.
+			//
+			// it('should throw InvalidCredentialsError when user provider does not match', async () => {
+			// 	tracker.on.select('directus_users').responseOnce([{ ...mockUser, provider: 'ldap' }]);
+			//
+			// 	await expect(
+			// 		service.login('default', { email: 'john@example.com', password: 'password' }),
+			// 	).rejects.toBeInstanceOf(InvalidCredentialsError);
+			// });
 
 			it('should throw ServiceUnavailableError when rate limiter is unreachable', async () => {
 				tracker.on.select('directus_users').responseOnce([mockUser]);
@@ -393,9 +399,9 @@ describe('Integration Tests', () => {
 				it('should throw InvalidCredentialsError when logging in with non-default provider and user has different provider', async () => {
 					tracker.on.select('directus_users').responseOnce([{ ...mockUser, provider: 'default' }]);
 
-					await expect(
-						service.login('google', { token: 'oauth-token' }),
-					).rejects.toBeInstanceOf(InvalidCredentialsError);
+					await expect(service.login('google', { token: 'oauth-token' })).rejects.toBeInstanceOf(
+						InvalidCredentialsError,
+					);
 				});
 			});
 		});
