@@ -10,16 +10,17 @@ if [ -z "${mode}" ]; then
 	echo
 	echo "Select Docker test/check mode:"
 	echo
-	echo "  1) lint       - ESLint only"
-	echo "  2) style      - Stylelint only"
-	echo "  3) format     - Prettier check only"
-	echo "  4) unit       - build + tests, excluding e2e and blackbox"
-	echo "  5) suite      - format + lint + style + build + tests, excluding e2e and blackbox"
-	echo "  6) blackbox   - packaged Directus blackbox tests"
-	echo "  7) coverage   - build + coverage tests"
-	echo "  8) all        - suite + blackbox + coverage, excluding e2e"
-	echo "  9) command    - custom command inside Docker"
+	echo "  1) lint     - ESLint only"
+	echo "  2) style    - Stylelint only"
+	echo "  3) format   - Prettier check only"
+	echo "  4) unit     - build + unit/normal tests, excluding e2e and blackbox"
+	echo "  5) suite    - format + lint + style + build + unit/normal tests"
+	echo "  9) command  - custom command inside Docker"
 	echo "  0) abort"
+	echo
+	echo "Note:"
+	echo "- E2E is intentionally excluded here."
+	echo "- Blackbox/coverage are intentionally not part of this lightweight Docker test wrapper."
 	echo
 	printf "Choice: "
 	read -r choice
@@ -40,15 +41,6 @@ if [ -z "${mode}" ]; then
 		5)
 			mode="suite"
 			;;
-		6)
-			mode="blackbox"
-			;;
-		7)
-			mode="coverage"
-			;;
-		8)
-			mode="all"
-			;;
 		9)
 			mode="command"
 			echo
@@ -67,7 +59,7 @@ if [ -z "${mode}" ]; then
 fi
 
 case "${mode}" in
-	lint|style|format|unit|test|blackbox|coverage|suite|all)
+	lint|style|format|unit|test|suite)
 		;;
 	command)
 		if [ -z "${test_command}" ]; then
@@ -89,10 +81,7 @@ case "${mode}" in
 		echo "  $0 format" >&2
 		echo "  $0 unit" >&2
 		echo "  $0 test" >&2
-		echo "  $0 blackbox" >&2
-		echo "  $0 coverage" >&2
 		echo "  $0 suite" >&2
-		echo "  $0 all" >&2
 		echo "  $0 command <command...>" >&2
 		exit 1
 		;;
@@ -138,7 +127,7 @@ if [ -n "${test_command}" ]; then
 fi
 
 echo
-echo "Action: run Directus tests/checks inside Docker"
+echo "Action: run Directus lightweight tests/checks inside Docker"
 echo
 echo "Plan:"
 echo "- Repository: $(pwd)"

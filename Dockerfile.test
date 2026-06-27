@@ -23,7 +23,7 @@ RUN pnpm fetch
 
 COPY --chown=node:node . .
 
-ARG TEST_MODE=suite
+ARG TEST_MODE=unit
 ARG TEST_COMMAND=""
 
 RUN <<'EOF'
@@ -56,18 +56,6 @@ RUN <<'EOF'
 		fi
 	}
 
-	run_normal_tests() {
-		echo
-		echo ">>> pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test"
-		pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test
-	}
-
-	run_coverage_tests() {
-		echo
-		echo ">>> pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test:coverage"
-		pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test:coverage
-	}
-
 	build_once() {
 		if [ "${DID_BUILD:-false}" = "true" ]; then
 			return
@@ -75,6 +63,12 @@ RUN <<'EOF'
 
 		run_required_script build
 		DID_BUILD="true"
+	}
+
+	run_unit_tests() {
+		echo
+		echo ">>> pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test"
+		pnpm --recursive --filter '!tests-blackbox' --filter '!e2e' test
 	}
 
 	if [ -n "${TEST_COMMAND}" ]; then
@@ -96,34 +90,18 @@ RUN <<'EOF'
 			;;
 		unit|test)
 			build_once
-			run_normal_tests
-			;;
-		blackbox)
-			run_required_script test:blackbox
-			;;
-		coverage)
-			build_once
-			run_coverage_tests
+			run_unit_tests
 			;;
 		suite)
 			run_optional_script format
 			run_required_script lint
 			run_optional_script lint:style
 			build_once
-			run_normal_tests
-			;;
-		all)
-			run_optional_script format
-			run_required_script lint
-			run_optional_script lint:style
-			build_once
-			run_normal_tests
-			run_optional_script test:blackbox
-			run_coverage_tests
+			run_unit_tests
 			;;
 		*)
 			echo "Unknown TEST_MODE: ${TEST_MODE}" >&2
-			echo "Allowed: lint, style, format, unit, test, blackbox, coverage, suite, all" >&2
+			echo "Allowed: lint, style, format, unit, test, suite" >&2
 			exit 1
 			;;
 	esac
