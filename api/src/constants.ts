@@ -7,6 +7,30 @@ import { getMilliseconds } from './utils/get-milliseconds.js';
 
 const env = useEnv();
 
+const DEFAULT_TUS_RETRY_DELAYS = [2000, 4000, 8000, 16000, 32000, 64000];
+
+function parseTusRetryDelays(value: unknown): number[] {
+	let rawRetryDelays: unknown[] = [];
+
+	if (Array.isArray(value)) {
+		rawRetryDelays = value;
+	} else if (typeof value === 'string') {
+		rawRetryDelays = value.split(',');
+	}
+
+	const retryDelays = rawRetryDelays
+		.map((delay) => String(delay).trim())
+		.filter((delay) => delay.length > 0)
+		.map((delay) => Number(delay))
+		.filter((delay) => Number.isFinite(delay) && delay >= 0);
+
+	if (retryDelays.length === 0) {
+		return DEFAULT_TUS_RETRY_DELAYS;
+	}
+
+	return retryDelays;
+}
+
 export const SYSTEM_ASSET_ALLOW_LIST: TransformationParams[] = [
 	{
 		key: 'system-small-cover',
@@ -106,6 +130,7 @@ export const RESUMABLE_UPLOADS = {
 	CHUNK_SIZE: bytes.parse(env['TUS_CHUNK_SIZE'] as string),
 	EXPIRATION_TIME: getMilliseconds(env['TUS_UPLOAD_EXPIRATION'], 600_000 /* 10min */),
 	SCHEDULE: String(env['TUS_CLEANUP_SCHEDULE'] as string),
+	RETRY_DELAYS: parseTusRetryDelays(env['TUS_RETRY_DELAYS']),
 };
 
 export const ALLOWED_DB_DEFAULT_FUNCTIONS = ['gen_random_uuid()'];

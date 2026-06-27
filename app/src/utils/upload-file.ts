@@ -11,6 +11,36 @@ import { useServerStore } from '@/stores/server';
 import { getRootPath } from '@/utils/get-root-path';
 import { notify } from '@/utils/notify';
 
+const DEFAULT_TUS_RETRY_DELAYS = [2000, 4000, 8000, 16000, 32000, 64000];
+
+function shouldRetryTusUpload(error: unknown) {
+	const status = getTusErrorStatus(error);
+
+	if (status === 0) {
+		return true;
+	}
+
+	if (status === 408 || status === 409 || status === 423 || status === 425 || status === 429) {
+		return true;
+	}
+
+	if (status >= 500) {
+		return true;
+	}
+
+	return false;
+}
+
+function getTusErrorStatus(error: unknown) {
+	if (typeof error !== 'object' || error === null || !('originalResponse' in error)) {
+		return 0;
+	}
+
+	const originalResponse = error.originalResponse as { getStatus?: () => number } | undefined;
+
+	return originalResponse?.getStatus?.() ?? 0;
+}
+
 export async function uploadFile(
 	file: globalThis.File,
 	options?: {
@@ -45,6 +75,7 @@ export async function uploadFile(
 				// Allow user to re-upload of the same file
 				// https://github.com/tus/tus-js-client/blob/main/docs/api.md#removefingerprintonsuccess
 				removeFingerprintOnSuccess: true,
+				retryDelays: server.info.uploads?.retryDelays ?? DEFAULT_TUS_RETRY_DELAYS,
 				onBeforeRequest(req) {
 					const xml = req.getUnderlyingObject();
 					xml.withCredentials = true;
@@ -80,8 +111,8 @@ export async function uploadFile(
 						resolve(fileInfo as File);
 					}
 				},
-				onShouldRetry() {
-					return false;
+				onShouldRetry(error) {
+					return shouldRetryTusUpload(error);
 				},
 				onAfterResponse(_req, res) {
 					fileInfo.id ??= res.getHeader('Directus-File-Id');

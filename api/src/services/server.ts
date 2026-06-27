@@ -148,6 +148,7 @@ export class ServerService {
 					...info['uploads'],
 					tus: true,
 					chunkSize: RESUMABLE_UPLOADS.CHUNK_SIZE,
+					retryDelays: RESUMABLE_UPLOADS.RETRY_DELAYS,
 				};
 			}
 		}

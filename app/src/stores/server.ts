@@ -79,6 +79,7 @@ export type Info = {
 		tus?: boolean;
 		chunkSize?: number;
 		maxConcurrency?: number;
+		retryDelays?: number[];
 	};
 };
 
