@@ -81,6 +81,8 @@ const query = ref<RelationQuerySingle>({
 const { collection, field } = toRefs(props);
 const { relationInfo } = useRelationM2O(collection, field);
 
+const uploadComponent = ref<{ abort: (confirmAbort?: boolean) => void } | null>(null);
+const uploadInProgress = ref(false);
 const activeDialog = ref<'upload' | 'choose' | 'url' | null>(null);
 const menuOpen = ref(false);
 
@@ -164,7 +166,26 @@ function setSelection(selection: (string | number)[] | null) {
 	}
 }
 
-function onUpload(fileInfo: FileInfo) {
+function closeUploadDialog() {
+	if (uploadInProgress.value) {
+		if (!window.confirm('Cancel Upload?')) {
+			return;
+		}
+
+		uploadComponent.value?.abort(false);
+		uploadInProgress.value = false;
+	}
+
+	activeDialog.value = null;
+}
+
+function onUpload(fileInfo: FileInfo | null) {
+	uploadInProgress.value = false;
+
+	if (!fileInfo) {
+		return;
+	}
+
 	file.value = fileInfo;
 	activeDialog.value = null;
 	update(fileInfo.id);
@@ -341,16 +362,23 @@ function useURLImport() {
 
 		<VDialog
 			:model-value="activeDialog === 'upload'"
-			@esc="activeDialog = null"
-			@update:model-value="activeDialog = null"
+			@esc="closeUploadDialog"
+			@update:model-value="closeUploadDialog"
 		>
 			<VCard>
 				<VCardTitle>{{ $t('upload_from_device') }}</VCardTitle>
 				<VCardText>
-					<VUpload from-url :folder="folder" :accept="combinedAcceptString" @input="onUpload" />
+					<VUpload
+						ref="uploadComponent"
+						from-url
+						:folder="folder"
+						:accept="combinedAcceptString"
+						@start="uploadInProgress = true"
+						@input="onUpload"
+					/>
 				</VCardText>
 				<VCardActions>
-					<VButton secondary @click="activeDialog = null">{{ $t('cancel') }}</VButton>
+					<VButton secondary @click="closeUploadDialog">{{ $t('cancel') }}</VButton>
 				</VCardActions>
 			</VCard>
 		</VDialog>

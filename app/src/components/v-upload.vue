@@ -374,7 +374,11 @@ function openFileBrowser() {
 	input.value?.click();
 }
 
-function abort() {
+function abort(confirmAbort = true) {
+	if (confirmAbort && uploading.value && !window.confirm('Cancel Upload?')) {
+		return;
+	}
+
 	uploadController?.abort();
 }
 

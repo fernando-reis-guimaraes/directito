@@ -51,6 +51,21 @@ password set. No additional environment variable is required to enable this beha
 This does not allow multiple external providers for the same user. For example, a user configured with Google is not
 allowed to log in through Microsoft.
 
+
+### Upload cancellation confirmation
+
+This fork protects long-running file uploads from accidental cancellation.
+
+When a file upload is in progress, closing the upload dialog through `Esc`, outside click, or the modal cancel button now asks for browser-native confirmation before aborting the upload.
+
+Current confirmation text:
+
+```text
+Cancel Upload?
+```
+
+This is intentionally short and language-neutral enough for English, Portuguese, and Spanish while the feature is being validated. It can later be replaced by a styled Directus confirmation dialog and proper i18n strings.
+
 ### TUS upload retry patch
 
 This fork enables retry support for Directus Studio resumable uploads using `tus-js-client`.
