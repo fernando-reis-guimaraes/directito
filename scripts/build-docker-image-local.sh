@@ -5,6 +5,19 @@ default_image="docker.io/umappsnet/uma-directus"
 docker_image="${1:-}"
 platforms="${PLATFORMS:-linux/amd64,linux/arm64}"
 
+case "$(uname -m)" in
+arm64)
+	local_platform="linux/arm64"
+	;;
+x86_64 | amd64)
+	local_platform="linux/amd64"
+	;;
+*)
+	echo "Error: unsupported local architecture: $(uname -m)" >&2
+	exit 1
+	;;
+esac
+
 if [ -z "${docker_image}" ]; then
 	echo
 	printf "Docker image [%s]: " "${default_image}"
@@ -59,6 +72,7 @@ echo "Plan:"
 echo "- Repository: $(pwd)"
 echo "- Docker image: ${docker_image}"
 echo "- Platforms: ${platforms}"
+echo "- Local load platform: ${local_platform}"
 echo "- Version tag: ${docker_image}:${version}"
 echo "- Alias tag: ${docker_image}:${extra_tag}"
 echo "- Push image: ${push_image}"
@@ -74,14 +88,22 @@ if [ "${push_image}" = "true" ]; then
 	echo "This script will push the built image and manifest list to the configured registry."
 	echo "Make sure you are logged in with: docker login"
 else
-	echo "This script will build both platforms into the Buildx cache without pushing."
+	echo "This script will build the configured platforms into the Buildx cache without pushing."
+	echo "Use LOAD at confirmation to build only ${local_platform} and load the image into local Docker."
 fi
 
 echo
-echo "Type BUILD to continue. Anything else aborts."
+echo "Type BUILD to continue, or LOAD to build only ${local_platform} and load into local Docker."
+echo "Anything else aborts."
 read -r confirmation
 
-if [ "${confirmation}" != "BUILD" ]; then
+load_image="false"
+
+if [ "${confirmation}" = "LOAD" ]; then
+	push_image="false"
+	load_image="true"
+	platforms="${local_platform}"
+elif [ "${confirmation}" != "BUILD" ]; then
 	echo "Aborted."
 	exit 0
 fi
@@ -106,6 +128,8 @@ build_args=(
 
 if [ "${push_image}" = "true" ]; then
 	build_args+=(--push)
+elif [ "${load_image}" = "true" ]; then
+	build_args+=(--load)
 fi
 
 docker buildx build "${build_args[@]}" .
@@ -123,11 +147,17 @@ if [ "${push_image}" = "true" ]; then
 	echo "${docker_image}:${version}"
 	echo "${docker_image}:${extra_tag}"
 else
-	echo "Built both platforms into the Buildx cache."
-	echo
-	echo "To push the image and manifest list, run:"
-	printf "docker buildx build --file ./Dockerfile --platform %q --provenance=true --tag %q --tag %q --push .\n" \
-		"${platforms}" \
-		"${docker_image}:${version}" \
-		"${docker_image}:${extra_tag}"
+	if [ "${load_image}" = "true" ]; then
+		echo "Built and loaded local image:"
+		echo "${docker_image}:${version}"
+		echo "${docker_image}:${extra_tag}"
+	else
+		echo "Built configured platforms into the Buildx cache."
+		echo
+		echo "To push the image and manifest list, run:"
+		printf "docker buildx build --file ./Dockerfile --platform %q --provenance=true --tag %q --tag %q --push .\n" \
+			"${platforms}" \
+			"${docker_image}:${version}" \
+			"${docker_image}:${extra_tag}"
+	fi
 fi
