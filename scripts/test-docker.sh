@@ -12,9 +12,8 @@ if [ -z "${mode}" ]; then
 	echo
 	echo "  1) lint     - ESLint only"
 	echo "  2) style    - Stylelint only"
-	echo "  3) format   - Prettier check only"
-	echo "  4) unit     - build + unit/normal tests, excluding e2e and blackbox"
-	echo "  5) suite    - format + lint + style + build + unit/normal tests"
+	echo "  3) unit     - build + unit/normal tests, excluding e2e and blackbox"
+	echo "  4) suite    - lint + style + build + unit/normal tests"
 	echo "  9) command  - custom command inside Docker"
 	echo "  0) abort"
 	echo
@@ -33,12 +32,9 @@ if [ -z "${mode}" ]; then
 			mode="style"
 			;;
 		3)
-			mode="format"
-			;;
-		4)
 			mode="unit"
 			;;
-		5)
+		4)
 			mode="suite"
 			;;
 		9)
@@ -59,7 +55,7 @@ if [ -z "${mode}" ]; then
 fi
 
 case "${mode}" in
-	lint|style|format|unit|test|suite)
+	lint|style|unit|test|suite)
 		;;
 	command)
 		if [ -z "${test_command}" ]; then
@@ -78,8 +74,7 @@ case "${mode}" in
 		echo "  $0" >&2
 		echo "  $0 lint" >&2
 		echo "  $0 style" >&2
-		echo "  $0 format" >&2
-		echo "  $0 unit" >&2
+			echo "  $0 unit" >&2
 		echo "  $0 test" >&2
 		echo "  $0 suite" >&2
 		echo "  $0 command <command...>" >&2
