@@ -1,0 +1,202 @@
+# syntax=docker/dockerfile:1.4
+
+ARG NODE_VERSION=22
+
+FROM node:${NODE_VERSION}-alpine AS test
+
+RUN npm install --global corepack@latest
+
+RUN apk --no-cache add python3 py3-setuptools build-base git
+
+WORKDIR /directus
+
+COPY package.json .
+RUN corepack enable && corepack prepare
+
+RUN chown node:node .
+USER node
+
+ENV NODE_OPTIONS=--max-old-space-size=8192
+
+COPY pnpm-lock.yaml .
+RUN pnpm fetch
+
+COPY --chown=node:node . .
+
+ARG TEST_MODE=suite
+ARG TEST_COMMAND=""
+
+RUN <<'EOF'
+	set -eu
+
+	pnpm install --recursive --offline --frozen-lockfile
+
+	if [ -n "${TEST_COMMAND}" ]; then
+		echo
+		echo ">>> ${TEST_COMMAND}"
+		sh -lc "${TEST_COMMAND}"
+		exit 0
+	fi
+
+	node <<'NODE' > /tmp/uma-directus-test-plan.sh
+const packageJson = require('./package.json');
+const scripts = packageJson.scripts || {};
+const mode = process.env.TEST_MODE || 'suite';
+
+const selectedScripts = [];
+const selectedScriptNames = new Set();
+
+function hasScript(name) {
+	return Object.prototype.hasOwnProperty.call(scripts, name);
+}
+
+function addScript(name) {
+	if (!hasScript(name)) {
+		return;
+	}
+
+	if (selectedScriptNames.has(name)) {
+		return;
+	}
+
+	selectedScriptNames.add(name);
+	selectedScripts.push(name);
+}
+
+function addTypecheckScript() {
+	if (hasScript('typecheck')) {
+		addScript('typecheck');
+		return;
+	}
+
+	if (hasScript('type-check')) {
+		addScript('type-check');
+		return;
+	}
+
+	if (hasScript('check:types')) {
+		addScript('check:types');
+		return;
+	}
+
+	if (hasScript('typecheck:all')) {
+		addScript('typecheck:all');
+	}
+}
+
+function isWatchOrDevScript(name) {
+	const lowerName = name.toLowerCase();
+
+	if (lowerName.includes('watch')) {
+		return true;
+	}
+
+	if (lowerName.includes('dev')) {
+		return true;
+	}
+
+	return false;
+}
+
+function isE2eScript(name) {
+	return name.toLowerCase().includes('e2e');
+}
+
+function isTestScript(name) {
+	if (name === 'test') {
+		return true;
+	}
+
+	return name.startsWith('test:');
+}
+
+function addTestScripts(options) {
+	const includeE2e = options.includeE2e;
+
+	for (const name of Object.keys(scripts).sort()) {
+		if (!isTestScript(name)) {
+			continue;
+		}
+
+		if (isWatchOrDevScript(name)) {
+			continue;
+		}
+
+		if (!includeE2e && isE2eScript(name)) {
+			continue;
+		}
+
+		addScript(name);
+	}
+}
+
+if (mode === 'suite') {
+	addScript('lint');
+	addTypecheckScript();
+	addTestScripts({ includeE2e: false });
+} else if (mode === 'unit') {
+	if (hasScript('test:unit')) {
+		addScript('test:unit');
+	} else if (hasScript('test:unit:run')) {
+		addScript('test:unit:run');
+	} else if (hasScript('test')) {
+		addScript('test');
+	}
+} else if (mode === 'lint') {
+	addScript('lint');
+} else if (mode === 'typecheck') {
+	addTypecheckScript();
+} else if (mode === 'test') {
+	addTestScripts({ includeE2e: false });
+} else if (mode === 'e2e') {
+	for (const name of Object.keys(scripts).sort()) {
+		if (!isTestScript(name)) {
+			continue;
+		}
+
+		if (isWatchOrDevScript(name)) {
+			continue;
+		}
+
+		if (!isE2eScript(name)) {
+			continue;
+		}
+
+		addScript(name);
+	}
+} else if (mode === 'all') {
+	addScript('lint');
+	addTypecheckScript();
+	addTestScripts({ includeE2e: true });
+} else {
+	console.error(`Unknown TEST_MODE: ${mode}`);
+	console.error('Allowed: suite, unit, lint, typecheck, test, e2e, all');
+	process.exit(1);
+}
+
+console.log('#!/bin/sh');
+console.log('set -eu');
+console.log('echo "Available root scripts:"');
+for (const [name, command] of Object.entries(scripts)) {
+	console.log(`echo ${JSON.stringify(`${name}: ${command}`)}`);
+}
+console.log('echo');
+
+if (selectedScripts.length === 0) {
+	console.log(`echo ${JSON.stringify(`No scripts selected for mode: ${mode}`)} >&2`);
+	console.log('exit 1');
+} else {
+	console.log(`echo ${JSON.stringify(`Selected test mode: ${mode}`)}`);
+	console.log(`echo ${JSON.stringify(`Selected scripts: ${selectedScripts.join(', ')}`)}`);
+	console.log('echo');
+
+	for (const name of selectedScripts) {
+		console.log(`echo ${JSON.stringify(`>>> pnpm run ${name}`)}`);
+		console.log(`pnpm run ${JSON.stringify(name)}`);
+		console.log('echo');
+	}
+}
+NODE
+
+	sh /tmp/uma-directus-test-plan.sh
+EOF
