@@ -1,0 +1,45 @@
+Pacote que falhou:
+@directus/api
+
+Arquivo:
+api/src/services/authentication.test.ts
+
+Teste:
+Integration Tests > Services / Authentication > login >
+should throw InvalidCredentialsError when user provider does not match
+
+Linha:
+api/src/services/authentication.test.ts:240
+
+Esperado:
+service.login(...).rejects.toBeInstanceOf(InvalidCredentialsError)
+
+Recebido:
+Erro SQL começando com:
+select "directus_policies"."enforc...
+
+Resultado:
+Test Files: 1 failed | 301 passed | 1 skipped
+Tests: 1 failed | 3406 passed | 2 todo
+
+
+#19 188.3 api test:  ✓ src/schedules/tus.test.ts (2 tests) 6ms
+#19 188.3 api test: ⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+#19 188.3 api test:  FAIL  src/services/authentication.test.ts > Integration Tests > Services / Authentication > login > should throw InvalidCredentialsError when user provider does not match
+#19 188.3 api test: AssertionError: expected Error: select "directus_policies"."enforc… to be an instance of
+#19 188.3 api test:  ❯ src/services/authentication.test.ts:240:5
+#19 188.3 api test:     238|     tracker.on.select('directus_users').responseOnce([{ ...mockUser, p…
+#19 188.3 api test:     239|
+#19 188.3 api test:     240|     await expect(
+#19 188.3 api test:        |     ^
+#19 188.3 api test:     241|      service.login('default', { email: 'john@example.com', password: '…
+#19 188.3 api test:     242|     ).rejects.toBeInstanceOf(InvalidCredentialsError);
+#19 188.3 api test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+#19 188.3 api test:  Test Files  1 failed | 301 passed | 1 skipped (303)
+#19 188.3 api test:       Tests  1 failed | 3406 passed | 2 todo (3409)
+#19 188.3 api test:    Start at  21:50:34
+#19 188.3 api test:    Duration  54.14s (transform 8.42s, setup 0ms, collect 378.20s, tests 15.87s, environment 63ms, prepare 26.04s)
+#19 188.4 api test: Failed
+#19 188.4 /directus/api:
+#19 188.4  ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  @directus/api@35.2.0 test: `vitest run`
+#19 188.4 Exit status 1
