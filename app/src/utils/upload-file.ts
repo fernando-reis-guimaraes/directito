@@ -111,8 +111,29 @@ export async function uploadFile(
 						resolve(fileInfo as File);
 					}
 				},
-				onShouldRetry(error) {
-					return shouldRetryTusUpload(error);
+				onShouldRetry(error, retryAttempt) {
+					const shouldRetry = shouldRetryTusUpload(error);
+
+					if (shouldRetry) {
+						const retryDelays = server.info.uploads?.retryDelays ?? DEFAULT_TUS_RETRY_DELAYS;
+
+						// eslint-disable-next-line no-console
+						console.warn('[Directus] TUS upload failed. Retrying chunk upload.', {
+							fileName: file.name,
+							status: getTusErrorStatus(error),
+							retryAttempt: retryAttempt + 1,
+							retryDelay: retryDelays[retryAttempt] ?? null,
+						});
+					} else {
+						// eslint-disable-next-line no-console
+						console.error('[Directus] TUS upload failed. Aborting chunk upload.', {
+							fileName: file.name,
+							status: getTusErrorStatus(error),
+							retryAttempt: retryAttempt + 1,
+						});
+					}
+
+					return shouldRetry;
 				},
 				onAfterResponse(_req, res) {
 					fileInfo.id ??= res.getHeader('Directus-File-Id');
