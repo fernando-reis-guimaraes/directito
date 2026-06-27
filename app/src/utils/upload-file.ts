@@ -41,6 +41,11 @@ function getTusErrorStatus(error: unknown) {
 	return originalResponse?.getStatus?.() ?? 0;
 }
 
+function logTusUpload(message: string, data: Record<string, unknown>) {
+	// eslint-disable-next-line no-console
+	console.info(`[Directus] TUS upload ${message}.`, data);
+}
+
 export async function uploadFile(
 	file: globalThis.File,
 	options?: {
@@ -56,6 +61,7 @@ export async function uploadFile(
 
 	const server = useServerStore();
 	let notified = false;
+	let lastLoggedPercentage = -1;
 
 	if (server.info.uploads?.tus === true) {
 		const fileInfo: Partial<File> = { ...(options?.preset ?? {}) };
@@ -66,6 +72,14 @@ export async function uploadFile(
 
 		fileInfo.filename_download = file.name;
 		fileInfo.type = file.type;
+
+		logTusUpload('initializing', {
+			fileName: file.name,
+			fileSize: file.size,
+			fileType: file.type,
+			chunkSize: server.info.uploads?.chunkSize ?? DEFAULT_CHUNK_SIZE,
+			retryDelays: server.info.uploads?.retryDelays ?? DEFAULT_TUS_RETRY_DELAYS,
+		});
 
 		return new Promise((resolve, reject) => {
 			const upload = new Upload(file, {
@@ -81,12 +95,32 @@ export async function uploadFile(
 					xml.withCredentials = true;
 				},
 				onError(error) {
+					// eslint-disable-next-line no-console
+					console.error('[Directus] TUS upload failed.', {
+						fileName: file.name,
+						status: getTusErrorStatus(error),
+						error,
+					});
+
 					reject(error);
 					emitter.emit(Events.tusResumableUploadsChanged);
 				},
 				onProgress(bytesUploaded, bytesTotal) {
 					const percentage = Number(((bytesUploaded / bytesTotal) * 100).toFixed(2));
+					const loggedPercentage = Math.floor(percentage);
+
 					progressHandler(percentage);
+
+					if (loggedPercentage !== lastLoggedPercentage) {
+						lastLoggedPercentage = loggedPercentage;
+
+						logTusUpload('progress updated', {
+							fileName: file.name,
+							percentage,
+							bytesUploaded,
+							bytesTotal,
+						});
+					}
 
 					if (!notified) {
 						emitter.emit(Events.tusResumableUploadsChanged);
@@ -94,6 +128,11 @@ export async function uploadFile(
 					}
 				},
 				async onSuccess() {
+					logTusUpload('completed', {
+						fileName: file.name,
+						fileId: fileInfo.id ?? null,
+					});
+
 					if (options?.notifications) {
 						notify({
 							title: i18n.global.t('upload_file_success'),
@@ -137,12 +176,25 @@ export async function uploadFile(
 					return shouldRetry;
 				},
 				onAfterResponse(_req, res) {
-					fileInfo.id ??= res.getHeader('Directus-File-Id');
+					const responseFileId = res.getHeader('Directus-File-Id');
+
+					if (!fileInfo.id && responseFileId) {
+						logTusUpload('received file id', {
+							fileName: file.name,
+							fileId: responseFileId,
+						});
+					}
+
+					fileInfo.id ??= responseFileId;
 				},
 			});
 
 			options?.onChunkedUpload?.({
 				start() {
+					logTusUpload('starting from controller', {
+						fileName: file.name,
+					});
+
 					upload.start();
 				},
 				abort: () => {
@@ -156,9 +208,20 @@ export async function uploadFile(
 			upload.findPreviousUploads().then((previousUploads: PreviousUpload[]) => {
 				// Found previous uploads so we select the first one.
 				if (previousUploads.length > 0) {
+					logTusUpload('resuming previous upload', {
+						fileName: file.name,
+						previousUploadCount: previousUploads.length,
+						previousUploadId: previousUploads[0]!.metadata['id'] ?? null,
+					});
+
 					upload.resumeFromPreviousUpload(previousUploads[0]!);
 					fileInfo.id = previousUploads[0]!.metadata['id'];
 				}
+
+				logTusUpload('starting', {
+					fileName: file.name,
+					resuming: previousUploads.length > 0,
+				});
 
 				// Start the upload
 				upload.start();
