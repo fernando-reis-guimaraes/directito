@@ -1,31 +1,97 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mode="${1:-suite}"
+cd "$(dirname "$0")/.."
+
+mode="${1:-}"
 test_command=""
 
+if [ -z "${mode}" ]; then
+	echo
+	echo "Select Docker test/check mode:"
+	echo
+	echo "  1) lint       - ESLint only"
+	echo "  2) style      - Stylelint only"
+	echo "  3) format     - Prettier check only"
+	echo "  4) unit       - build + tests, excluding e2e and blackbox"
+	echo "  5) suite      - format + lint + style + build + tests, excluding e2e and blackbox"
+	echo "  6) blackbox   - packaged Directus blackbox tests"
+	echo "  7) coverage   - build + coverage tests"
+	echo "  8) all        - suite + blackbox + coverage, excluding e2e"
+	echo "  9) command    - custom command inside Docker"
+	echo "  0) abort"
+	echo
+	printf "Choice: "
+	read -r choice
+
+	case "${choice}" in
+		1)
+			mode="lint"
+			;;
+		2)
+			mode="style"
+			;;
+		3)
+			mode="format"
+			;;
+		4)
+			mode="unit"
+			;;
+		5)
+			mode="suite"
+			;;
+		6)
+			mode="blackbox"
+			;;
+		7)
+			mode="coverage"
+			;;
+		8)
+			mode="all"
+			;;
+		9)
+			mode="command"
+			echo
+			printf "Command: "
+			read -r test_command
+			;;
+		0|"")
+			echo "Aborted."
+			exit 0
+			;;
+		*)
+			echo "Invalid choice: ${choice}" >&2
+			exit 1
+			;;
+	esac
+fi
+
 case "${mode}" in
-	suite|unit|lint|typecheck|test|e2e|all)
+	lint|style|format|unit|test|blackbox|coverage|suite|all)
 		;;
 	command)
-		shift
+		if [ -z "${test_command}" ]; then
+			shift || true
 
-		if [ "$#" -eq 0 ]; then
-			echo "Usage: $0 command <command...>" >&2
-			exit 1
+			if [ "$#" -eq 0 ]; then
+				echo "Usage: $0 command <command...>" >&2
+				exit 1
+			fi
+
+			test_command="$*"
 		fi
-
-		test_command="$*"
 		;;
 	*)
 		echo "Usage:" >&2
 		echo "  $0" >&2
-		echo "  $0 suite" >&2
-		echo "  $0 unit" >&2
 		echo "  $0 lint" >&2
-		echo "  $0 typecheck" >&2
+		echo "  $0 style" >&2
+		echo "  $0 format" >&2
+		echo "  $0 unit" >&2
 		echo "  $0 test" >&2
-		echo "  $0 e2e" >&2
+		echo "  $0 blackbox" >&2
+		echo "  $0 coverage" >&2
+		echo "  $0 suite" >&2
 		echo "  $0 all" >&2
 		echo "  $0 command <command...>" >&2
 		exit 1
