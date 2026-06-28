@@ -83,6 +83,7 @@ const { relationInfo } = useRelationM2O(collection, field);
 
 const uploadComponent = ref<{ abort: (confirmAbort?: boolean) => void } | null>(null);
 const uploadInProgress = ref(false);
+const confirmCancelUploadActive = ref(false);
 const activeDialog = ref<'upload' | 'choose' | 'url' | null>(null);
 const menuOpen = ref(false);
 
@@ -168,14 +169,17 @@ function setSelection(selection: (string | number)[] | null) {
 
 function closeUploadDialog() {
 	if (uploadInProgress.value) {
-		if (!window.confirm('Cancel Upload?')) {
-			return;
-		}
-
-		uploadComponent.value?.abort(false);
-		uploadInProgress.value = false;
+		confirmCancelUploadActive.value = true;
+		return;
 	}
 
+	activeDialog.value = null;
+}
+
+function cancelUploadAndCloseDialog() {
+	uploadComponent.value?.abort(false);
+	uploadInProgress.value = false;
+	confirmCancelUploadActive.value = false;
 	activeDialog.value = null;
 }
 
@@ -360,11 +364,7 @@ function useURLImport() {
 			</template>
 		</DrawerItem>
 
-		<VDialog
-			:model-value="activeDialog === 'upload'"
-			@esc="closeUploadDialog"
-			@update:model-value="closeUploadDialog"
-		>
+		<VDialog :model-value="activeDialog === 'upload'" @esc="closeUploadDialog" @update:model-value="closeUploadDialog">
 			<VCard>
 				<VCardTitle>{{ $t('upload_from_device') }}</VCardTitle>
 				<VCardText>
@@ -379,6 +379,24 @@ function useURLImport() {
 				</VCardText>
 				<VCardActions>
 					<VButton secondary @click="closeUploadDialog">{{ $t('cancel') }}</VButton>
+				</VCardActions>
+			</VCard>
+		</VDialog>
+
+		<VDialog
+			v-model="confirmCancelUploadActive"
+			persistent
+			@esc="confirmCancelUploadActive = false"
+			@apply="cancelUploadAndCloseDialog"
+		>
+			<VCard>
+				<VCardTitle>Cancel Upload?</VCardTitle>
+				<VCardText>Uploading....</VCardText>
+				<VCardActions>
+					<VButton secondary @click="confirmCancelUploadActive = false">
+						{{ $t('cancel') }}
+					</VButton>
+					<VButton kind="danger" @click="cancelUploadAndCloseDialog">Cancel Upload</VButton>
 				</VCardActions>
 			</VCard>
 		</VDialog>
