@@ -364,7 +364,11 @@ function useURLImport() {
 			</template>
 		</DrawerItem>
 
-		<VDialog :model-value="activeDialog === 'upload'" @esc="closeUploadDialog" @update:model-value="closeUploadDialog">
+		<VDialog
+			:model-value="activeDialog === 'upload'"
+			@esc="closeUploadDialog"
+			@update:model-value="closeUploadDialog"
+		>
 			<VCard>
 				<VCardTitle>{{ $t('upload_from_device') }}</VCardTitle>
 				<VCardText>
@@ -391,7 +395,7 @@ function useURLImport() {
 		>
 			<VCard>
 				<VCardTitle>Cancel Upload?</VCardTitle>
-				<VCardText>Uploading....</VCardText>
+				<VCardText>Uploading...</VCardText>
 				<VCardActions>
 					<VButton secondary @click="confirmCancelUploadActive = false">
 						{{ $t('cancel') }}
