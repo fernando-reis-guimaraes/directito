@@ -1,36 +1,9 @@
-import { URL } from 'node:url';
-import { useEnv } from '@directus/env';
 import type { OwnerInformation } from '@directus/types';
 import type { TelemetryReport } from '../types/report.js';
 
 export type OwnerReport = OwnerInformation & { project_id: string; version: string };
 
 /**
- * Post an anonymous usage report to the centralized intake server
+ * UMA fork policy: outbound Directus telemetry and compliance reporting are intentionally disabled.
  */
-export const sendReport = async (report: TelemetryReport | OwnerReport) => {
-	const env = useEnv();
-
-	const url =
-		'project_owner' in report
-			? new URL('/v1/owner', String(env['COMPLIANCE_URL']))
-			: new URL('/v1/metrics', String(env['TELEMETRY_URL']));
-
-	const headers: ResponseInit['headers'] = {
-		'Content-Type': 'application/json',
-	};
-
-	if (env['TELEMETRY_AUTHORIZATION']) {
-		headers['Authorization'] = env['TELEMETRY_AUTHORIZATION'] as string;
-	}
-
-	const res = await fetch(url, {
-		method: 'POST',
-		body: JSON.stringify(report),
-		headers,
-	});
-
-	if (!res.ok) {
-		throw new Error(`[${res.status}] ${await res.text()}`);
-	}
-};
+export const sendReport = async (_report: TelemetryReport | OwnerReport): Promise<void> => {};
