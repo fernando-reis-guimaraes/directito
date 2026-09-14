@@ -29,10 +29,15 @@ vi.mock('@vueuse/core', () => {
 			};
 		}),
 		useLocalStorage: vi.fn((_key: string, initialValue: unknown) => ref(initialValue)),
-		useSessionStorage: vi.fn((_key: string, initialValue: UIMessage[]) => {
-			const cloned = JSON.parse(JSON.stringify(initialValue ?? [])) as UIMessage[];
-			sessionMessagesRef = ref(cloned);
-			return sessionMessagesRef;
+		useSessionStorage: vi.fn((key: string, initialValue: unknown) => {
+			const cloned = JSON.parse(JSON.stringify(initialValue ?? []));
+			const storageRef = ref(cloned);
+
+			if (key === 'directus-ai-chat-messages') {
+				sessionMessagesRef = storageRef;
+			}
+
+			return storageRef;
 		}),
 	};
 });
@@ -55,6 +60,10 @@ vi.mock('@/views/private/private-view/stores/sidebar', () => ({
 		expand: vi.fn(),
 		onCollapse: vi.fn(),
 	})),
+}));
+
+vi.mock('vue-router', () => ({
+	useRoute: vi.fn(() => ({ path: '/', params: {} })),
 }));
 
 vi.mock('@ai-sdk/vue', () => {
@@ -323,6 +332,30 @@ describe('useAiStore', () => {
 			expect(parts[0].url).toBe('');
 			expect(parts[1].url).toBe('');
 			expect(parts[2].url).toBe('/assets/abc');
+		});
+	});
+
+	describe('conversation id', () => {
+		test('sends a stable non-empty conversationId in the transport body', () => {
+			useAiStore();
+
+			const first = lastTransportConfig.body().conversationId;
+			const second = lastTransportConfig.body().conversationId;
+
+			expect(typeof first).toBe('string');
+			expect(first.length).toBeGreaterThan(0);
+			expect(second).toBe(first);
+		});
+
+		test('rotates the conversationId on reset', () => {
+			const aiStore = useAiStore();
+
+			const before = lastTransportConfig.body().conversationId;
+			aiStore.reset();
+			const after = lastTransportConfig.body().conversationId;
+
+			expect(after).toBeTruthy();
+			expect(after).not.toBe(before);
 		});
 	});
 

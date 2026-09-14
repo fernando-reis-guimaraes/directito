@@ -1,4 +1,5 @@
 import { buildCustomModels, DEFAULT_AI_MODELS, type ModelDefinition, type ProviderType } from '@directus/ai';
+import { resolveOpenAICompatibleProtocol } from './registry.js';
 import type { AISettings } from './types.js';
 
 export function getModelDefinition(
@@ -30,6 +31,13 @@ export function getProviderOptions(provider: ProviderType, model: string, settin
 		const customModel = settings.openaiCompatibleModels?.find((m) => m.id === model);
 
 		if (customModel?.providerOptions) {
+			// Responses mode is backed by @ai-sdk/openai, which reads provider
+			// options under the `openai` namespace. Chat Completions mode keeps
+			// the existing custom provider name namespace.
+			if (resolveOpenAICompatibleProtocol(settings.openaiCompatibleProtocol) === 'responses') {
+				return { openai: customModel.providerOptions };
+			}
+
 			const providerName = settings.openaiCompatibleName ?? 'openai-compatible';
 			return { [providerName]: customModel.providerOptions };
 		}

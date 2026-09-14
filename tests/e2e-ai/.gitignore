@@ -1,0 +1,7 @@
+# Playwright run artifacts (may contain screenshots/traces; never commit)
+test-results/
+playwright-report/
+blob-report/
+
+# Disposable local E2E database
+.data.db*

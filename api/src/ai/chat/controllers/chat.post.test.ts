@@ -48,6 +48,10 @@ describe('aiChatPostHandler', () => {
 						openaiCompatibleApiKey: null,
 						openaiCompatibleBaseUrl: null,
 						openaiCompatibleName: null,
+						openaiCompatibleProtocol: null,
+						openaiCompatibleSessionHeader: null,
+						openaiCompatibleProtocol: null,
+						openaiCompatibleSessionHeader: null,
 						openaiCompatibleModels: null,
 						openaiCompatibleHeaders: null,
 						openaiAllowedModels: ['gpt-5', 'gpt-5-mini', 'gpt-5-nano', 'any-model-name'],
@@ -333,6 +337,39 @@ describe('aiChatPostHandler', () => {
 				systemPrompt: undefined,
 				onUsage: expect.any(Function),
 			});
+		});
+	});
+
+	describe('conversationId', () => {
+		it('forwards conversationId to createUiStream when provided', async () => {
+			mockReq.body = {
+				provider: 'openai',
+				model: 'gpt-5',
+				messages: [{ role: 'user', content: 'Hello' }],
+				tools: [],
+				conversationId: 'conv-123',
+			};
+
+			await aiChatPostHandler(mockReq as Request, mockRes as Response, mockNext);
+
+			expect(vi.mocked(createUiStream)).toHaveBeenCalledWith(
+				expect.any(Array),
+				expect.objectContaining({ conversationId: 'conv-123' }),
+			);
+		});
+
+		it('omits conversationId when not provided (legacy requests)', async () => {
+			mockReq.body = {
+				provider: 'openai',
+				model: 'gpt-5',
+				messages: [{ role: 'user', content: 'Hello' }],
+				tools: [],
+			};
+
+			await aiChatPostHandler(mockReq as Request, mockRes as Response, mockNext);
+
+			const options = vi.mocked(createUiStream).mock.calls[0]?.[1] as any;
+			expect(options).not.toHaveProperty('conversationId');
 		});
 	});
 

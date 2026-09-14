@@ -1,4 +1,4 @@
-import type { OpenAICompatibleHeader, OpenAICompatibleModel } from '@directus/ai';
+import type { OpenAICompatibleHeader, OpenAICompatibleModel, OpenAICompatibleProtocol } from '@directus/ai';
 
 interface OpenAIConfig {
 	type: 'openai';
@@ -19,6 +19,7 @@ interface OpenAICompatibleConfig {
 	type: 'openai-compatible';
 	apiKey: string;
 	baseUrl: string;
+	protocol: OpenAICompatibleProtocol;
 }
 
 export type ProviderConfig = OpenAIConfig | AnthropicConfig | GoogleConfig | OpenAICompatibleConfig;
@@ -30,6 +31,8 @@ export interface AISettings {
 	openaiCompatibleApiKey: string | null;
 	openaiCompatibleBaseUrl: string | null;
 	openaiCompatibleName: string | null;
+	openaiCompatibleProtocol: OpenAICompatibleProtocol | null;
+	openaiCompatibleSessionHeader: string | null;
 	openaiCompatibleModels: OpenAICompatibleModel[] | null;
 	openaiCompatibleHeaders: OpenAICompatibleHeader[] | null;
 	openaiAllowedModels: string[] | null;

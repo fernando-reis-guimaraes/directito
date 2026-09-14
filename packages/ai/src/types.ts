@@ -2,6 +2,9 @@ export type ProviderType = 'openai' | 'anthropic' | 'google' | 'openai-compatibl
 
 export type StandardProviderType = Exclude<ProviderType, 'openai-compatible'>;
 
+/** Transport used by the OpenAI-Compatible provider. Defaults to 'chat-completions'. */
+export type OpenAICompatibleProtocol = 'chat-completions' | 'responses';
+
 export type JSONValue = string | number | boolean | null | JSONValue[] | { [key: string]: JSONValue };
 
 export type ToolApprovalMode = 'always' | 'ask' | 'disabled';

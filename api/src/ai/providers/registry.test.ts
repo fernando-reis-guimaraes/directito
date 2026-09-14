@@ -1,9 +1,10 @@
 import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { createOpenAI } from '@ai-sdk/openai';
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
+import { createProviderRegistry } from 'ai';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createAnthropicWithFileSupport } from './anthropic-file-support.js';
-import { buildProviderConfigs, createAIProviderRegistry } from './registry.js';
+import { buildProviderConfigs, createAIProviderRegistry, resolveOpenAICompatibleProtocol } from './registry.js';
 import type { AISettings, ProviderConfig } from './types.js';
 
 vi.mock('@ai-sdk/openai', () => ({
@@ -35,6 +36,8 @@ const baseSettings: AISettings = {
 	openaiCompatibleApiKey: null,
 	openaiCompatibleBaseUrl: null,
 	openaiCompatibleName: null,
+	openaiCompatibleProtocol: null,
+	openaiCompatibleSessionHeader: null,
 	openaiCompatibleModels: null,
 	openaiCompatibleHeaders: null,
 	openaiAllowedModels: null,
@@ -96,6 +99,7 @@ describe('buildProviderConfigs', () => {
 			type: 'openai-compatible',
 			apiKey: 'custom-key',
 			baseUrl: 'http://localhost:11434/v1',
+			protocol: 'chat-completions',
 		});
 	});
 
@@ -230,5 +234,123 @@ describe('createAIProviderRegistry', () => {
 		expect(createOpenAI).toHaveBeenCalledWith({ apiKey: 'sk-openai' });
 		expect(createAnthropicWithFileSupport).toHaveBeenCalledWith('sk-anthropic');
 		expect(createGoogleGenerativeAI).toHaveBeenCalledWith({ apiKey: 'google-key' });
+	});
+});
+
+describe('resolveOpenAICompatibleProtocol', () => {
+	it('defaults to chat-completions when protocol is null (legacy settings)', () => {
+		expect(resolveOpenAICompatibleProtocol(null)).toBe('chat-completions');
+	});
+
+	it('defaults to chat-completions when protocol is undefined', () => {
+		expect(resolveOpenAICompatibleProtocol(undefined as any)).toBe('chat-completions');
+	});
+
+	it('keeps explicit chat-completions', () => {
+		expect(resolveOpenAICompatibleProtocol('chat-completions')).toBe('chat-completions');
+	});
+
+	it('keeps explicit responses', () => {
+		expect(resolveOpenAICompatibleProtocol('responses')).toBe('responses');
+	});
+
+	it('falls back to chat-completions for unknown values', () => {
+		expect(resolveOpenAICompatibleProtocol('other' as any)).toBe('chat-completions');
+	});
+});
+
+describe('openai-compatible protocol', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('buildProviderConfigs defaults to chat-completions for legacy settings', () => {
+		const configs = buildProviderConfigs({
+			...baseSettings,
+			openaiCompatibleApiKey: 'custom-key',
+			openaiCompatibleBaseUrl: 'http://localhost:11434/v1',
+		});
+
+		expect(configs).toHaveLength(1);
+
+		expect(configs[0]).toEqual({
+			type: 'openai-compatible',
+			apiKey: 'custom-key',
+			baseUrl: 'http://localhost:11434/v1',
+			protocol: 'chat-completions',
+		});
+	});
+
+	it('buildProviderConfigs keeps explicit responses protocol', () => {
+		const configs = buildProviderConfigs({
+			...baseSettings,
+			openaiCompatibleApiKey: 'custom-key',
+			openaiCompatibleBaseUrl: 'https://opencode.ai/zen/go/v1',
+			openaiCompatibleProtocol: 'responses',
+		});
+
+		expect(configs).toHaveLength(1);
+
+		expect(configs[0]).toEqual({
+			type: 'openai-compatible',
+			apiKey: 'custom-key',
+			baseUrl: 'https://opencode.ai/zen/go/v1',
+			protocol: 'responses',
+		});
+	});
+
+	it('uses Chat Completions transport when protocol is missing (backward compatible)', () => {
+		const configs: ProviderConfig[] = [
+			{ type: 'openai-compatible', apiKey: 'custom-key', baseUrl: 'http://localhost:11434/v1' } as ProviderConfig,
+		];
+
+		createAIProviderRegistry(configs);
+
+		expect(createOpenAICompatible).toHaveBeenCalledWith({
+			name: 'openai-compatible',
+			apiKey: 'custom-key',
+			baseURL: 'http://localhost:11434/v1',
+			headers: {},
+		});
+
+		expect(createOpenAI).not.toHaveBeenCalled();
+	});
+
+	it('uses Responses transport via @ai-sdk/openai when protocol is responses', () => {
+		const responses = vi.fn((modelId: string) => ({ id: `responses:${modelId}` }));
+		vi.mocked(createOpenAI).mockReturnValue({ responses } as any);
+
+		const configs: ProviderConfig[] = [
+			{
+				type: 'openai-compatible',
+				apiKey: 'custom-key',
+				baseUrl: 'https://opencode.ai/zen/go/v1',
+				protocol: 'responses',
+			},
+		];
+
+		const settings: AISettings = {
+			...baseSettings,
+			openaiCompatibleApiKey: 'custom-key',
+			openaiCompatibleBaseUrl: 'https://opencode.ai/zen/go/v1',
+			openaiCompatibleProtocol: 'responses',
+			openaiCompatibleHeaders: [{ header: 'User-Agent', value: 'directito-classlog-ai/1.0' }],
+		};
+
+		const registry: any = createAIProviderRegistry(configs, settings);
+
+		expect(createOpenAI).toHaveBeenCalledWith({
+			apiKey: 'custom-key',
+			baseURL: 'https://opencode.ai/zen/go/v1',
+			headers: { 'User-Agent': 'directito-classlog-ai/1.0' },
+		});
+
+		expect(createOpenAICompatible).not.toHaveBeenCalled();
+
+		// The registered provider resolves models through the explicit `.responses()` entry point
+		const registered = vi.mocked(createProviderRegistry).mock.calls[0]?.[0] as any;
+		registered['openai-compatible'].languageModel('muse-spark-1.3-contributor');
+		expect(responses).toHaveBeenCalledWith('muse-spark-1.3-contributor');
+		expect(registry).toBeDefined();
 	});
 });
