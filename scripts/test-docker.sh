@@ -25,77 +25,77 @@ if [ -z "${mode}" ]; then
 	read -r choice
 
 	case "${choice}" in
-		1)
-			mode="lint"
-			;;
-		2)
-			mode="style"
-			;;
-		3)
-			mode="unit"
-			;;
-		4)
-			mode="suite"
-			;;
-		9)
-			mode="command"
-			echo
-			printf "Command: "
-			read -r test_command
-			;;
-		0|"")
-			echo "Aborted."
-			exit 0
-			;;
-		*)
-			echo "Invalid choice: ${choice}" >&2
-			exit 1
-			;;
+	1)
+		mode="lint"
+		;;
+	2)
+		mode="style"
+		;;
+	3)
+		mode="unit"
+		;;
+	4)
+		mode="suite"
+		;;
+	9)
+		mode="command"
+		echo
+		printf "Command: "
+		read -r test_command
+		;;
+	0 | "")
+		echo "Aborted."
+		exit 0
+		;;
+	*)
+		echo "Invalid choice: ${choice}" >&2
+		exit 1
+		;;
 	esac
 fi
 
 case "${mode}" in
-	lint|style|unit|test|suite)
-		;;
-	command)
-		if [ -z "${test_command}" ]; then
-			shift || true
+lint | style | unit | test | suite)
+	;;
+command)
+	if [ -z "${test_command}" ]; then
+		shift || true
 
-			if [ "$#" -eq 0 ]; then
-				echo "Usage: $0 command <command...>" >&2
-				exit 1
-			fi
-
-			test_command="$*"
+		if [ "$#" -eq 0 ]; then
+			echo "Usage: $0 command <command...>" >&2
+			exit 1
 		fi
-		;;
-	*)
-		echo "Usage:" >&2
-		echo "  $0" >&2
-		echo "  $0 lint" >&2
-		echo "  $0 style" >&2
-			echo "  $0 unit" >&2
-		echo "  $0 test" >&2
-		echo "  $0 suite" >&2
-		echo "  $0 command <command...>" >&2
-		exit 1
-		;;
+
+		test_command="$*"
+	fi
+	;;
+*)
+	echo "Usage:" >&2
+	echo "  $0" >&2
+	echo "  $0 lint" >&2
+	echo "  $0 style" >&2
+	echo "  $0 unit" >&2
+	echo "  $0 test" >&2
+	echo "  $0 suite" >&2
+	echo "  $0 command <command...>" >&2
+	exit 1
+	;;
 esac
 
 platform="${PLATFORM:-}"
 
 if [ -z "${platform}" ]; then
 	case "$(uname -m)" in
-		arm64)
-			platform="linux/arm64"
-			;;
-		x86_64|amd64)
-			platform="linux/amd64"
-			;;
-		*)
-			echo "Error: unsupported local architecture: $(uname -m)" >&2
-			exit 1
-			;;
+	arm64)
+		platform="linux/arm64"
+		;;
+	x86_64 | amd64)
+		platform="linux/amd64"
+		;;
+	*)
+		echo "Error: unsupported local architecture: $(uname -m)" >&2
+		exit 1
+		;;
 	esac
 fi
 

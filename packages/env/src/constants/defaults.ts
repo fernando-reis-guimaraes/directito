@@ -114,7 +114,7 @@ export const DEFAULTS: Env = {
 
 	MARKETPLACE_TRUST: 'sandbox',
 
-	TELEMETRY: true,
+	TELEMETRY: false,
 	TELEMETRY_URL: 'https://telemetry.directus.io',
 	COMPLIANCE_URL: 'https://telemetry.directus.io',
 

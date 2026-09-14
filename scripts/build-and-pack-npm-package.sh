@@ -30,6 +30,7 @@ echo "Created npm tarball:"
 ls -lh tarball/*.tgz
 
 echo "Inspecting package metadata:"
+# shellcheck disable=SC2016
 tar -xOf tarball/*.tgz package/package.json | node -e '
 let data = "";
 process.stdin.on("data", chunk => data += chunk);
