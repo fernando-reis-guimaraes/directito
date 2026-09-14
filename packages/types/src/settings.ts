@@ -71,6 +71,8 @@ export type Settings = {
 	ai_openai_compatible_api_key: '**********' | null;
 	ai_openai_compatible_base_url: string | null;
 	ai_openai_compatible_name: string | null;
+	ai_openai_compatible_protocol: string | null;
+	ai_openai_compatible_session_header: string | null;
 	ai_openai_compatible_models: OpenAICompatibleModel[] | null;
 	ai_openai_compatible_headers: OpenAICompatibleHeader[] | null;
 	ai_openai_allowed_models: string[] | null;

@@ -25,6 +25,8 @@ describe('uploadToProvider', () => {
 		openaiCompatibleApiKey: null,
 		openaiCompatibleBaseUrl: null,
 		openaiCompatibleName: null,
+		openaiCompatibleProtocol: null,
+		openaiCompatibleSessionHeader: null,
 		openaiCompatibleModels: null,
 		openaiCompatibleHeaders: null,
 		openaiAllowedModels: null,

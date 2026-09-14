@@ -1683,6 +1683,8 @@ fields:
     ai_openai_compatible_name: Provider Name
     ai_openai_compatible_base_url: Base URL
     ai_openai_compatible_api_key: API Key
+    ai_openai_compatible_protocol: Protocol
+    ai_openai_compatible_session_header: Conversation Session Header
     ai_openai_compatible_models: Models
     ai_openai_compatible_headers: Custom Headers
     ai_model_id: Model ID

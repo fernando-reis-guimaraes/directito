@@ -62,6 +62,8 @@ describe('createUiStream', () => {
 		openaiCompatibleApiKey: null,
 		openaiCompatibleBaseUrl: null,
 		openaiCompatibleName: null,
+		openaiCompatibleProtocol: null,
+		openaiCompatibleSessionHeader: null,
 		openaiCompatibleModels: null,
 		openaiCompatibleHeaders: null,
 		openaiAllowedModels: null,
@@ -185,5 +187,99 @@ describe('createUiStream', () => {
 		onFinish({ usage: { inputTokens: 100, outputTokens: 50, totalTokens: 150 } });
 
 		expect(onUsage).toHaveBeenCalledWith({ inputTokens: 100, outputTokens: 50, totalTokens: 150 });
+	});
+
+	describe('conversation session header', () => {
+		const responsesSettings: AISettings = {
+			openaiApiKey: null,
+			anthropicApiKey: null,
+			googleApiKey: null,
+			openaiCompatibleApiKey: 'custom-key',
+			openaiCompatibleBaseUrl: 'https://opencode.ai/zen/go/v1',
+			openaiCompatibleName: 'OpenCode Go',
+			openaiCompatibleProtocol: 'responses',
+			openaiCompatibleSessionHeader: 'x-opencode-session',
+			openaiCompatibleModels: null,
+			openaiCompatibleHeaders: null,
+			openaiAllowedModels: null,
+			anthropicAllowedModels: null,
+			googleAllowedModels: null,
+			systemPrompt: null,
+		};
+
+		it('omits headers when no session header is configured', async () => {
+			await createUiStream(messages, {
+				provider: 'openai-compatible',
+				model: 'custom-model',
+				tools: {},
+				aiSettings: {
+					...responsesSettings,
+					openaiCompatibleSessionHeader: null,
+				},
+				conversationId: 'conv-123',
+			});
+
+			const call = vi.mocked(streamText).mock.calls[0]?.[0];
+			expect(call).not.toHaveProperty('headers');
+		});
+
+		it('omits headers when conversationId is missing', async () => {
+			await createUiStream(messages, {
+				provider: 'openai-compatible',
+				model: 'custom-model',
+				tools: {},
+				aiSettings: responsesSettings,
+			});
+
+			const call = vi.mocked(streamText).mock.calls[0]?.[0];
+			expect(call).not.toHaveProperty('headers');
+		});
+
+		it('passes the configured session header with the conversation ID', async () => {
+			await createUiStream(messages, {
+				provider: 'openai-compatible',
+				model: 'custom-model',
+				tools: {},
+				aiSettings: responsesSettings,
+				conversationId: 'conv-123',
+			});
+
+			expect(streamText).toHaveBeenCalledWith(
+				expect.objectContaining({
+					headers: { 'x-opencode-session': 'conv-123' },
+				}),
+			);
+		});
+
+		it('keeps the same session header value for repeated calls (stable conversation)', async () => {
+			for (let i = 0; i < 2; i++) {
+				await createUiStream(messages, {
+					provider: 'openai-compatible',
+					model: 'custom-model',
+					tools: {},
+					aiSettings: responsesSettings,
+					conversationId: 'conv-stable',
+				});
+			}
+
+			const calls = vi.mocked(streamText).mock.calls.map((args) => args[0]);
+
+			expect(calls).toHaveLength(2);
+			expect(calls[0]).toMatchObject({ headers: { 'x-opencode-session': 'conv-stable' } });
+			expect(calls[1]).toMatchObject({ headers: { 'x-opencode-session': 'conv-stable' } });
+		});
+
+		it('omits session headers for other providers', async () => {
+			await createUiStream(messages, {
+				provider: 'openai',
+				model: 'gpt-4',
+				tools: {},
+				aiSettings,
+				conversationId: 'conv-123',
+			});
+
+			const call = vi.mocked(streamText).mock.calls[0]?.[0];
+			expect(call).not.toHaveProperty('headers');
+		});
 	});
 });

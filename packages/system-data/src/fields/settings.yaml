@@ -914,6 +914,24 @@ fields:
     width: half
     group: ai_group
 
+  - field: ai_openai_compatible_protocol
+    interface: select-dropdown
+    options:
+      choices:
+        - value: chat-completions
+          text: Chat Completions
+        - value: responses
+          text: Responses
+    width: half
+    group: ai_group
+
+  - field: ai_openai_compatible_session_header
+    interface: input
+    options:
+      placeholder: 'x-opencode-session'
+    width: half
+    group: ai_group
+
   - field: ai_openai_compatible_headers
     interface: list
     special:

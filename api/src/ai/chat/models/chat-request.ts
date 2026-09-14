@@ -89,6 +89,13 @@ export const ChatRequest = z.intersection(
 		messages: z.array(z.looseObject({})),
 		toolApprovals: z.record(z.string(), ToolApprovalMode).optional(),
 		context: ChatContext.optional(),
+		/**
+		 * Stable identifier for the current conversation. When the
+		 * OpenAI-Compatible provider is configured with a session header,
+		 * this value is sent as that header on every model request so
+		 * stateful gateways can correlate turns and tool-loop steps.
+		 */
+		conversationId: z.string().min(1).max(128).optional(),
 	}),
 );
 
