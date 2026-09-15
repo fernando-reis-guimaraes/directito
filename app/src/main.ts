@@ -25,10 +25,10 @@ async function init() {
 	console.log(DIRECTUS_LOGO);
 
 	console.info(
-		`Hey! Interested in helping build this open-source data management platform?\nIf so, join our growing team of contributors at: https://directus.chat`,
+		`Hey! You're running Directito, a fork for self-hosted data management.\nSource code: https://github.com/ultra-mega-apps/directito`,
 	);
 
-	console.info(`%c🐰 Starting Directus...`, 'color:Green');
+	console.info(`%c🐰 Starting Directito...`, 'color:Green');
 
 	console.time('🕓 Application Loaded');
 

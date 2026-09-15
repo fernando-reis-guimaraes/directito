@@ -37,7 +37,7 @@ const logoURL = computed<string | null>(() => {
 							class="logo"
 							:style="serverInfo?.project?.project_color ? { backgroundColor: serverInfo.project.project_color } : {}"
 						>
-							<img src="../../assets/logo.svg" alt="Directus" class="directus-logo" />
+							<img src="../../assets/logo.svg" alt="Directito" class="directus-logo" />
 						</div>
 						<div class="title">
 							<p class="subtitle">{{ serverInfo?.project?.project_name }}</p>

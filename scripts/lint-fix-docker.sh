@@ -26,7 +26,7 @@ if [ -z "${platform}" ]; then
 	esac
 fi
 
-image="uma-directus-node22-lint-fix:latest"
+image="directito-node22-lint-fix:latest"
 
 echo
 echo "Action: run ESLint fix inside Docker"
@@ -60,7 +60,7 @@ docker run --rm \
 	--platform "${platform}" \
 	--user "$(id -u):$(id -g)" \
 	-v "$(pwd):/directus" \
-	-v "uma-directus-pnpm-store:/pnpm-store" \
+	-v "directito-pnpm-store:/pnpm-store" \
 	-e HOME=/tmp \
 	-e PNPM_HOME=/tmp/pnpm-home \
 	-e XDG_CACHE_HOME=/tmp/cache \

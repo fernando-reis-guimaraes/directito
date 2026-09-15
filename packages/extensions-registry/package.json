@@ -2,13 +2,11 @@
 	"name": "@directus/extensions-registry",
 	"version": "3.0.26",
 	"description": "Abstraction for exploring Directus extensions on a package registry",
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/extensions-registry"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "MIT",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
 	"type": "module",

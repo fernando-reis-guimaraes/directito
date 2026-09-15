@@ -6,13 +6,11 @@
 		"directus",
 		"extensions"
 	],
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/create-directus-extension"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "MIT",
 	"author": "Nicola Krumschmidt",
 	"contributors": [

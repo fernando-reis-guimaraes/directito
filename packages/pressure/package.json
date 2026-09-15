@@ -2,13 +2,11 @@
 	"name": "@directus/pressure",
 	"version": "3.0.22",
 	"description": "Pressure based rate limiter",
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/pressure"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "MIT",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
 	"type": "module",

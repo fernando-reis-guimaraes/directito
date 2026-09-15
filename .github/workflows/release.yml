@@ -12,7 +12,7 @@ permissions:
   id-token: write
 
 env:
-  DOCKERHUB_IMAGE: docker.io/umappsnet/uma-directus
+  DOCKERHUB_IMAGE: docker.io/umappsnet/directito
 
 jobs:
   check-version:
@@ -173,4 +173,4 @@ jobs:
           gh release create \
             "$GITHUB_REF_NAME" \
             ${{ needs.check-version.outputs.prerelease == 'true' && '--prerelease' || '' }} \
-            --notes "Directus $GITHUB_REF_NAME"
+            --notes "Directito $GITHUB_REF_NAME"

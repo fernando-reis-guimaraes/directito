@@ -2,13 +2,11 @@
 	"name": "@directus/extensions-sdk",
 	"version": "17.1.4",
 	"description": "A toolkit to develop extensions to extend Directus",
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/extensions-sdk"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "MIT",
 	"author": "Nicola Krumschmidt",
 	"type": "module",

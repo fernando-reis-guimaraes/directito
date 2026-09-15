@@ -18,7 +18,7 @@ test.describe('studio setup without owner information', () => {
 		expect((await infoRes.json()).data.setupCompleted).toBe(false);
 
 		await page.goto(`${APP_URL}/setup`);
-		await expect(page.getByText('Welcome to Directus')).toBeVisible({ timeout: 30_000 });
+		await expect(page.getByText('Welcome to Directito')).toBeVisible({ timeout: 30_000 });
 
 		// Admin account fields only: first name, last name, admin email, passwords.
 		const textInputs = page.locator('.v-form input:not([type="password"])');
@@ -31,7 +31,7 @@ test.describe('studio setup without owner information', () => {
 		await passwordInputs.nth(1).fill(ADMIN_PASSWORD);
 
 		// Launch must be enabled WITHOUT owner metadata or license acceptance.
-		const launch = page.getByRole('button', { name: 'Launch Directus' });
+		const launch = page.getByRole('button', { name: 'Launch Directito' });
 		await expect(launch).toBeEnabled({ timeout: 10_000 });
 		await launch.click();
 

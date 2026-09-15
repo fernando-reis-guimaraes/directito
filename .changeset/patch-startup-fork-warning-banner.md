@@ -2,4 +2,4 @@
 '@directus/api': patch
 ---
 
-Added a startup warning banner for forked Directus deployments that points to github.com/ultra-mega-apps/uma-directus.
+Added a startup warning banner for Directito deployments that points to github.com/ultra-mega-apps/directito.
