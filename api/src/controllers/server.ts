@@ -102,7 +102,9 @@ router.post(
 
 		try {
 			await createAdmin(req.schema, {
-				email: req.body.project_owner,
+				// `email` is the admin login identity. `project_owner` is accepted as a
+				// fallback for older clients; owner metadata itself is optional.
+				email: req.body.email ?? req.body.project_owner,
 				password: req.body.password,
 				first_name: req.body.first_name,
 				last_name: req.body.last_name,
@@ -110,7 +112,16 @@ router.post(
 
 			const settingsService = new SettingsService({ schema: req.schema });
 
-			settingsService.setOwner(req.body);
+			// Owner information is optional local metadata. Only persist it when the
+			// client actually supplied it, and never treat its absence as an error.
+			if (
+				req.body.project_owner != null ||
+				req.body.project_usage != null ||
+				req.body.org_name != null ||
+				req.body.product_updates != null
+			) {
+				await settingsService.setOwner(req.body);
+			}
 		} catch (error: any) {
 			if (isDirectusError(error, ErrorCode.Forbidden)) {
 				return next();

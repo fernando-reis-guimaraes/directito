@@ -1,0 +1,17 @@
+{
+	"name": "tests-e2e-no-owner",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Playwright E2E proving absent owner information is a valid normal state (no popup, no setup gate, no outbound owner traffic)",
+	"scripts": {
+		"test": "playwright test",
+		"test:chromium": "playwright test --project=chromium"
+	},
+	"devDependencies": {
+		"@playwright/test": "1.55.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

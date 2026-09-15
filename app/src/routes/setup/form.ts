@@ -5,34 +5,23 @@ import { useI18n } from 'vue-i18n';
 import z from 'zod';
 import { validateItem } from '@/utils/validate-item';
 
-export const FormValidator = z.discriminatedUnion('project_usage', [
-	z.object({
-		first_name: z.string(),
-		last_name: z.string(),
-		project_owner: z.email(),
-		password: z.string(),
-		password_confirm: z.string(),
-		project_usage: z.enum(['personal', 'community']).nullable().optional(),
-		org_name: z.string().nullable().optional(),
-		license: z.literal(true),
-		product_updates: z.boolean().optional(),
-	}),
-	z.object({
-		first_name: z.string(),
-		last_name: z.string(),
-		project_owner: z.email(),
-		password: z.string(),
-		password_confirm: z.string(),
-		project_usage: z.literal('commercial'),
-		org_name: z.string(),
-		license: z.literal(true),
-		product_updates: z.boolean().optional(),
-	}),
-]);
+export const FormValidator = z.object({
+	first_name: z.string(),
+	last_name: z.string(),
+	email: z.email(),
+	password: z.string(),
+	password_confirm: z.string(),
+	project_owner: z.email().nullable().optional(),
+	project_usage: z.enum(['personal', 'commercial', 'community']).nullable().optional(),
+	org_name: z.string().nullable().optional(),
+	license: z.boolean().optional(),
+	product_updates: z.boolean().optional(),
+});
 
 export const defaultValues: SetupForm = {
 	first_name: null,
 	last_name: null,
+	email: null,
 	project_owner: null,
 	password: null,
 	password_confirm: null,
@@ -47,12 +36,24 @@ export type ValidationError = Omit<FailedValidationErrorExtensions, 'type'> & { 
 export function validate(value: Record<string, any>, fields: MaybeRef<Field[]>, register = false) {
 	let errors: ValidationError[] = validateItem(value, unref(fields), true);
 
-	if (!z.email().safeParse(value.project_owner).success) {
-		errors.push({
-			field: 'project_owner',
-			path: [],
-			type: 'email',
-		});
+	if (register) {
+		// Admin account email is required; owner metadata is optional.
+		if (!z.email().safeParse(value.email).success) {
+			errors.push({
+				field: 'email',
+				path: [],
+				type: 'email',
+			});
+		}
+	} else if (value.project_owner != null && value.project_owner !== '') {
+		// Owner metadata is optional local metadata. Only validate the format when provided.
+		if (!z.email().safeParse(value.project_owner).success) {
+			errors.push({
+				field: 'project_owner',
+				path: [],
+				type: 'email',
+			});
+		}
 	}
 
 	if (register && value.password !== value.password_confirm) {
@@ -76,8 +77,8 @@ export function validate(value: Record<string, any>, fields: MaybeRef<Field[]>, 
 
 export function useFormFields(
 	register: MaybeRef<boolean>,
-	value: Ref<Partial<SetupForm>> | ModelRef<Partial<SetupForm> | undefined>,
-	initialValues?: Ref<Partial<SetupForm>> | ModelRef<Partial<SetupForm> | undefined>,
+	_value: Ref<Partial<SetupForm>> | ModelRef<Partial<SetupForm> | undefined>,
+	_initialValues?: Ref<Partial<SetupForm>> | ModelRef<Partial<SetupForm> | undefined>,
 ): ComputedRef<Field[]> {
 	const { t } = useI18n();
 
@@ -113,10 +114,10 @@ export function useFormFields(
 		}
 
 		fields.push({
-			field: 'project_owner',
+			field: register ? 'email' : 'project_owner',
 			name: t(register ? 'admin_email' : 'owner_email'),
 			meta: {
-				required: true,
+				required: register ? true : false,
 				interface: 'input',
 				options: {
 					placeholder: t('email_address'),
@@ -147,35 +148,6 @@ export function useFormFields(
 				},
 			});
 		}
-
-		fields.push({
-			field: 'project_usage',
-			name: t('how_do_you_use_directus'),
-			meta: {
-				required: false,
-				interface: 'select-dropdown',
-				options: {
-					items: [
-						{ icon: 'account_circle', value: 'personal', text: t('usage_personal') },
-						{ icon: 'domain', value: 'commercial', text: t('usage_commercial') },
-						{ icon: 'groups', value: 'community', text: t('usage_community') },
-					],
-				},
-				width: 'full',
-			},
-		});
-
-		if ((value.value?.project_usage ?? initialValues?.value?.project_usage) === 'commercial')
-			fields.push({
-				field: 'org_name',
-				name: t('organization_name'),
-				meta: {
-					required: true,
-					interface: 'input',
-					options: {},
-					width: 'full',
-				},
-			});
 
 		return fields as Field[];
 	});

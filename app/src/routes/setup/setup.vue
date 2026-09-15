@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { SetupForm as Form } from '@directus/types';
 import { useHead } from '@unhead/vue';
-import { computed, ref, watch } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { defaultValues, FormValidator, useFormFields, validate, ValidationError } from './form';
@@ -39,7 +39,7 @@ async function launch() {
 
 		await login({
 			credentials: {
-				email: form.value.project_owner!,
+				email: form.value.email!,
 				password: form.value.password!,
 			},
 		});
@@ -57,17 +57,11 @@ const errorMessage = computed(() => {
 });
 
 const formComplete = computed(() => FormValidator.safeParse(form.value).success);
-
-watch(form, () => {
-	if (form.value.project_usage !== 'commercial') {
-		form.value.org_name = null;
-	}
-});
 </script>
 
 <template>
 	<PublicView wide>
-		<SetupForm v-model="form" :errors="errors" utm-location="onboarding"></SetupForm>
+		<SetupForm v-model="form" :errors="errors"></SetupForm>
 		<VButton full-width :disabled="!formComplete" :loading="isSaving" @click="launch()">
 			<VIcon name="rocket_launch" />
 			{{ $t('setup_launch') }}

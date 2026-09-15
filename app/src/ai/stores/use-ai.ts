@@ -63,6 +63,17 @@ export const useAiStore = defineStore('ai-store', () => {
 
 	const storedMessages = useSessionStorage<UIMessage[]>('directus-ai-chat-messages', []);
 
+	const newConversationId = () =>
+		typeof crypto !== 'undefined' && 'randomUUID' in crypto
+			? crypto.randomUUID()
+			: `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+	// Stable identifier for the current conversation. Persists across turns and
+	// tool-call loops within the tab session; regenerated on reset so a new
+	// conversation gets a new ID. The API forwards it as the configured
+	// OpenAI-Compatible session header (e.g. `x-opencode-session`).
+	const conversationId = useSessionStorage<string>('directus-ai-conversation-id', newConversationId());
+
 	// UI State
 	const chatOpen = useLocalStorage<boolean>('ai-chat-open', false);
 	const input = ref<string>('');
@@ -260,6 +271,7 @@ export const useAiStore = defineStore('ai-store', () => {
 				tools,
 				toolApprovals: approvals,
 				context,
+				conversationId: conversationId.value,
 			};
 		},
 		prepareSendMessagesRequest: (req) => {
@@ -501,6 +513,7 @@ export const useAiStore = defineStore('ai-store', () => {
 		chat.clearError();
 		chat.messages.splice(0, chat.messages.length);
 		storedMessages.value = [];
+		conversationId.value = newConversationId();
 		processedToolCallIds.clear();
 		isPreparingSubmission.value = false;
 

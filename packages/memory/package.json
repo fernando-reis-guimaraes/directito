@@ -2,13 +2,11 @@
 	"name": "@directus/memory",
 	"version": "3.1.8",
 	"description": "Memory / Redis abstraction for Directus",
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/memory"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "MIT",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
 	"type": "module",

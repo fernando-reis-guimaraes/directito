@@ -6,7 +6,6 @@ Shared types for Directus
 
 This package exports shared types for use within Directus, an open-source headless CMS.
 
-For more information about Directus, visit the [official website](https://directus.io).
 
 ## Installation
 
@@ -17,9 +16,8 @@ npm install @directus/types
 ## License
 
 This package is licensed under the MIT License. See the
-[LICENSE](https://github.com/directus/directus/blob/main/packages/types/license) file for more information.
+[LICENSE](https://github.com/ultra-mega-apps/directito/blob/main/packages/types/license) file for more information.
 
 ## Additional Resources
 
-- [Directus Website](https://directus.io)
-- [Directus GitHub Repository](https://github.com/directus/directus)
+- [Directus GitHub Repository](https://github.com/ultra-mega-apps/directito)

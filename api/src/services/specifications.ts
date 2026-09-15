@@ -112,7 +112,7 @@ class OASSpecsService implements SpecificationSubService {
 			servers: [
 				{
 					url,
-					description: 'Your current Directus instance.',
+					description: 'Your current Directito instance.',
 				},
 			],
 			paths,

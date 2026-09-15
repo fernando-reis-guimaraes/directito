@@ -21,12 +21,10 @@
 		"framework",
 		"vue"
 	],
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git"
+		"url": "https://github.com/ultra-mega-apps/directito.git"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "BUSL-1.1",
 	"author": {
 		"name": "Monospace Inc",

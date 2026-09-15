@@ -18,12 +18,7 @@ const isSaving = ref(false);
 const form = ref<Partial<Form>>({});
 const fields = useFormFields(false, form);
 
-const isSaveAllowed = computed(
-	() =>
-		form.value.project_owner ||
-		form.value.project_usage ||
-		('product_updates' in form.value && form.value.product_updates !== initialValues.value.product_updates),
-);
+const isSaveAllowed = computed(() => form.value.project_owner);
 
 const initialValues = computed(() => ({
 	project_owner: settingsStore.settings?.project_owner,
@@ -76,14 +71,7 @@ async function reset() {
 		</template>
 
 		<div class="drawer-content">
-			<SetupForm
-				v-model="form"
-				:initial-values="initialValues"
-				:errors="errors"
-				:register="false"
-				skip-license
-				utm-location="settings"
-			></SetupForm>
+			<SetupForm v-model="form" :initial-values="initialValues" :errors="errors" :register="false"></SetupForm>
 		</div>
 	</VDrawer>
 </template>

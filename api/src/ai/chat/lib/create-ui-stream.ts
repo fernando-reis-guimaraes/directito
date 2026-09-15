@@ -33,12 +33,25 @@ export interface CreateUiStreamOptions {
 	userId?: string | null;
 	role?: string | null;
 	context?: ChatContext;
+	/** Stable identifier for the current conversation (see ChatRequest.conversationId). */
+	conversationId?: string;
 	onUsage?: (usage: Pick<LanguageModelUsage, 'inputTokens' | 'outputTokens' | 'totalTokens'>) => void | Promise<void>;
 }
 
 export const createUiStream = async (
 	messages: UIMessage[],
-	{ provider, model, tools, aiSettings, systemPrompt, userId, role, context, onUsage }: CreateUiStreamOptions,
+	{
+		provider,
+		model,
+		tools,
+		aiSettings,
+		systemPrompt,
+		userId,
+		role,
+		context,
+		conversationId,
+		onUsage,
+	}: CreateUiStreamOptions,
 ): Promise<StreamTextResult<Record<string, Tool<any, any>>, any>> => {
 	const configs = buildProviderConfigs(aiSettings);
 	const providerConfig = configs.find((c) => c.type === provider);
@@ -68,6 +81,16 @@ export const createUiStream = async (
 	const finalTools = applyAnthropicToolSearch(provider, model, tools);
 	const telemetryConfig = getAITelemetryConfig({ provider, model, userId, role });
 
+	// Dynamic conversation session header (e.g. `x-opencode-session`): sent via
+	// the native streamText `headers` option so it reaches every model request,
+	// including tool-loop continuation steps. Omitted when unconfigured.
+	const sessionHeader = aiSettings.openaiCompatibleSessionHeader?.trim();
+
+	const headers =
+		provider === 'openai-compatible' && sessionHeader && conversationId
+			? { [sessionHeader]: conversationId }
+			: undefined;
+
 	const stream = streamText({
 		system: baseSystemPrompt,
 		model: languageModel,
@@ -75,6 +98,7 @@ export const createUiStream = async (
 		stopWhen: [stepCountIs(10)],
 		providerOptions,
 		tools: finalTools,
+		...(headers && { headers }),
 		...(telemetryConfig ? { experimental_telemetry: telemetryConfig } : {}),
 		/**
 		 * prepareStep is called before each AI step to prepare the system prompt.

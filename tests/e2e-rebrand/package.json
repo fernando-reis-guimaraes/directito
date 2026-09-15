@@ -1,0 +1,17 @@
+{
+	"name": "tests-e2e-rebrand",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Playwright E2E proving the Directito rebrand: user-visible strings/defaults say Directito and nothing talks to Directus-controlled endpoints",
+	"scripts": {
+		"test": "playwright test",
+		"test:chromium": "playwright test --project=chromium"
+	},
+	"devDependencies": {
+		"@playwright/test": "1.55.0"
+	},
+	"engines": {
+		"node": ">=22"
+	}
+}

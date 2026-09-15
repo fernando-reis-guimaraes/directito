@@ -9,6 +9,8 @@ const baseSettings: AISettings = {
 	openaiCompatibleApiKey: null,
 	openaiCompatibleBaseUrl: null,
 	openaiCompatibleName: null,
+	openaiCompatibleProtocol: null,
+	openaiCompatibleSessionHeader: null,
 	openaiCompatibleModels: null,
 	openaiCompatibleHeaders: null,
 	openaiAllowedModels: null,
@@ -125,5 +127,67 @@ describe('getProviderOptions', () => {
 		const result = getProviderOptions('openai-compatible', 'llama3', settings);
 
 		expect(result).toEqual({});
+	});
+
+	it('uses openai namespace for providerOptions in responses mode', () => {
+		const settings: AISettings = {
+			...baseSettings,
+			openaiCompatibleName: 'OpenCode Go',
+			openaiCompatibleProtocol: 'responses',
+			openaiCompatibleModels: [
+				{
+					id: 'muse-spark-1.3-contributor',
+					name: 'Muse Spark 1.3 Contributor',
+					providerOptions: { customOption: 'value' },
+				},
+			],
+		};
+
+		const result = getProviderOptions('openai-compatible', 'muse-spark-1.3-contributor', settings);
+
+		expect(result).toEqual({
+			openai: { customOption: 'value' },
+		});
+	});
+
+	it('keeps custom provider name namespace in explicit chat-completions mode', () => {
+		const settings: AISettings = {
+			...baseSettings,
+			openaiCompatibleName: 'ollama',
+			openaiCompatibleProtocol: 'chat-completions',
+			openaiCompatibleModels: [
+				{
+					id: 'llama3',
+					name: 'Llama 3',
+					providerOptions: { customOption: 'value' },
+				},
+			],
+		};
+
+		const result = getProviderOptions('openai-compatible', 'llama3', settings);
+
+		expect(result).toEqual({
+			ollama: { customOption: 'value' },
+		});
+	});
+
+	it('keeps custom provider name namespace for legacy settings without protocol', () => {
+		const settings: AISettings = {
+			...baseSettings,
+			openaiCompatibleName: 'ollama',
+			openaiCompatibleModels: [
+				{
+					id: 'llama3',
+					name: 'Llama 3',
+					providerOptions: { customOption: 'value' },
+				},
+			],
+		};
+
+		const result = getProviderOptions('openai-compatible', 'llama3', settings);
+
+		expect(result).toEqual({
+			ollama: { customOption: 'value' },
+		});
 	});
 });
