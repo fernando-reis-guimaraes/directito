@@ -97,6 +97,8 @@ export type OwnerInformation = {
 export type SetupForm = {
 	first_name: string | null;
 	last_name: string | null;
+	/** Admin account email. Used as the login identity during initial setup. */
+	email: string | null;
 	password: string | null;
 	password_confirm: string | null;
 	license: boolean;

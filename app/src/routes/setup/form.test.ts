@@ -21,30 +21,24 @@ test('useFormFields for setup', () => {
 	expect(result.value.map((field) => field.field)).toEqual([
 		'first_name',
 		'last_name',
-		'project_owner',
+		'email',
 		'password',
 		'password_confirm',
-		'project_usage',
 	]);
 });
 
 test('useFormFields for modal/edit', () => {
 	const result = useFormFields(false, ref(defaultValues));
 
-	expect(result.value.map((field) => field.field)).toEqual(['project_owner', 'project_usage']);
-});
-
-test('useFormFields with project_usage = commercial', () => {
-	const result = useFormFields(false, ref({ ...defaultValues, project_usage: 'commercial' }));
-
-	expect(result.value.map((field) => field.field)).toEqual(['project_owner', 'project_usage', 'org_name']);
+	expect(result.value.map((field) => field.field)).toEqual(['project_owner']);
 });
 
 test('validate on invalid setup form', () => {
-	const fields = useFormFields(false, ref(defaultValues));
-	const result = validate({}, fields);
+	const fields = useFormFields(true, ref(defaultValues));
+	const result = validate({}, fields, true);
 
 	expect(result.length).toBeGreaterThan(0);
+	expect(result.map((error) => error.field)).toContain('email');
 });
 
 test('validate on valid setup form', () => {
@@ -54,7 +48,7 @@ test('validate on valid setup form', () => {
 		{
 			first_name: 'Admin',
 			last_name: 'User',
-			project_owner: 'admin@example.com',
+			email: 'admin@example.com',
 			password: 'pw',
 			password_confirm: 'pw',
 			project_usage: null,
@@ -68,6 +62,38 @@ test('validate on valid setup form', () => {
 	expect(result).toEqual([]);
 });
 
+test('validate on setup form without owner information', () => {
+	const fields = useFormFields(true, ref(defaultValues));
+
+	// Absent owner information is a valid normal state and must not block setup.
+	const result = validate(
+		{
+			first_name: 'Admin',
+			last_name: 'User',
+			email: 'admin@example.com',
+			password: 'pw',
+			password_confirm: 'pw',
+			project_usage: null,
+			project_owner: null,
+			org_name: null,
+			license: false,
+			product_updates: false,
+		},
+		fields,
+		true,
+	);
+
+	expect(result).toEqual([]);
+});
+
+test('validate owner metadata as optional when editing', () => {
+	const fields = useFormFields(false, ref(defaultValues));
+
+	// Empty owner metadata must validate cleanly outside of setup as well.
+	expect(validate({}, fields)).toEqual([]);
+	expect(validate({ project_owner: null }, fields)).toEqual([]);
+});
+
 test('validate with unequal password', () => {
 	const fields = useFormFields(true, ref(defaultValues));
 
@@ -75,7 +101,7 @@ test('validate with unequal password', () => {
 		{
 			first_name: 'Admin',
 			last_name: 'User',
-			project_owner: 'admin@example.com',
+			email: 'admin@example.com',
 			password: 'pw',
 			password_confirm: 'invalid',
 			project_usage: null,

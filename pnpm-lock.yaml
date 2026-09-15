@@ -3367,6 +3367,12 @@ importers:
         specifier: 1.55.0
         version: 1.55.0
 
+  tests/e2e-no_owner:
+    devDependencies:
+      '@playwright/test':
+        specifier: 1.55.0
+        version: 1.55.0
+
   tests/sandbox:
     dependencies:
       '@directus/tsconfig':
