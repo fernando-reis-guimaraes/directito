@@ -21,21 +21,21 @@
 # 'Proxy', 'Intl'
 
 about: About
-directus_bsl: Directus BSL 1.1
+directus_bsl: Directito BSL 1.1
 privacy_policy: Privacy Policy
 contact_our_team: Contact our Team
-setup_welcome: Welcome to Directus
+setup_welcome: Welcome to Directito
 setup_info: Let's create your admin account and get your project up and running.
 setup_license_notice: >
-  Directus is free to use for entities under $5 million in annual revenue, funding, or operating budget.
+  Directito is free to use for entities under $5 million in annual revenue, funding, or operating budget.
 setup_license_follow_up: >
-  Entities above this threshold require a paid license. You can continue evaluating Directus now and {contactOurTeam}
+  Entities above this threshold require a paid license. You can continue evaluating Directito now and {contactOurTeam}
   when you're ready to discuss production use.
 setup_save_accept_license: >
   By hitting save, you accept the terms of the {directusBsl} and {privacyPolicy}.
 setup_accept_license: I accept the terms of the {directusBsl} and {privacyPolicy}
 setup_marketing_emails: Send me product updates and release notes
-setup_launch: Launch Directus
+setup_launch: Launch Directito
 setup_project: Setup Project
 first_name: First Name
 last_name: Last Name
@@ -43,7 +43,7 @@ admin_email: Admin Email
 owner_email: Owner Email
 email_address: Email Address
 organization_name: Organization Name
-how_do_you_use_directus: What are you using Directus for?
+how_do_you_use_directus: What are you using Directito for?
 usage_personal: Personal / Learning
 usage_commercial: Business / Commercial
 usage_community: Open Source / Community
@@ -433,9 +433,9 @@ geometry:
 theme_auto: Automatic (Based on System)
 theme_light: Light Mode
 theme_dark: Dark Mode
-theme_directus_default: Directus Default
-theme_directus_minimal: Directus Minimal
-theme_directus_colormatch: Directus Color Match
+theme_directus_default: Directito Default
+theme_directus_minimal: Directito Minimal
+theme_directus_colormatch: Directito Color Match
 not_available_for_type: Not Available for this Type
 create_translations: Create Translations
 auto_refresh: Auto Refresh
@@ -1132,7 +1132,7 @@ deployment:
     overview: Overview
     providers: Providers
     configure: Configure
-    provider_description: Trigger {provider} deployments from within Directus
+    provider_description: Trigger {provider} deployments from within Directito
     projects: '{count} Project|{count} Projects'
   provider:
     setup_title: '{provider} Setup'
@@ -1142,14 +1142,14 @@ deployment:
     token:
       label: Personal Access Token
       placeholder: Enter your access token...
-      encrypted_notice: This token will be encrypted and stored securely in your Directus configuration
+      encrypted_notice: This token will be encrypted and stored securely in your Directito configuration
     settings:
       settings: '{provider} Configuration'
       edit_configuration: Edit Configuration
       delete: Delete Configuration
       delete_confirm: This action is permanent and can not be undone. Are you sure you would like to proceed?
       remove_projects_confirm:
-        Removing the project(s) ({projects}) will permanently delete all their deployment history from Directus. This
+        Removing the project(s) ({projects}) will permanently delete all their deployment history from Directito. This
         action cannot be undone. Are you sure you want to proceed?
     vercel:
       name: Vercel
@@ -1180,9 +1180,9 @@ deployment:
         placeholder: your-account-slug
     projects: Projects
     select_projects: Select Projects
-    select_projects_hint: Choose which projects you want to manage from Directus
+    select_projects_hint: Choose which projects you want to manage from Directito
     project:
-      not_deployable: Project not deployable by Directus. Please see documentation for more info.
+      not_deployable: Project not deployable by Directito. Please see documentation for more info.
     runs:
       runs: Deployment Runs
       id: Deployment ID
@@ -1642,31 +1642,24 @@ fields:
     collaborative_editing_note: WebSockets are required for collaborative editing to work.
     ai_notice:
       'AI Assistant provides an in-app sidebar to converse with an LLM. Once enabled, open the AI sidebar from the
-      toolbar to ask questions, generate content, and get help working with your project. <a
-      href="https://directus.io/docs/guides/ai/assistant" target="_blank">Learn more about configuring and using AI
-      Assistant.</a>'
+      toolbar to ask questions, generate content, and get help working with your project.'
     mcp_enabled: MCP Server
     mcp_enabled_note:
-      'Connect AI/LLM tools to your Directus project via <a href="https://directus.io/docs/guides/ai/mcp"
-      target="_blank">Model Context Protocol (MCP)</a>. This enables AI assistants to read and interact with your
-      Directus data securely.'
+      'Connect AI/LLM tools to your Directito project via Model Context Protocol (MCP). This enables AI assistants to
+      read and interact with your Directito data securely.'
     mcp_notice:
-      'Model Context Protocol is a standard for connecting LLMs to applications like Directus. Once enabled, the
-      Directus MCP server will be available at `/mcp`. <a href="https://directus.io/docs/guides/ai/mcp"
-      target="_blank">Learn more about MCP and how to connect.</a>'
+      'Model Context Protocol is a standard for connecting LLMs to applications like Directito. Once enabled, the
+      Directito MCP server will be available at `/mcp`.'
     mcp_allow_deletes: Allow Deletes
     mcp_allow_deletes_note:
       'Enable deletion of items, files, Flows, fields, relations, and collections through MCP tools. <strong>WARNING:
       May cause data loss.</strong> Disabled by default for safety.'
     mcp_prompts_collection: AI Prompts Collection
-    mcp_prompts_collection_note:
-      'Select collection for storing <a href="https://directus.io/docs/guides/ai/mcp/prompts" target="_blank">reusable
-      prompt templates</a> for AI interactions.'
+    mcp_prompts_collection_note: 'Select collection for storing reusable prompt templates for AI interactions.'
     mcp_system_prompt_divider: System Prompt Configuration
     mcp_system_prompt_enabled: Use System Prompt
     mcp_system_prompt_enabled_note:
-      "Use the <a href='https://directus.io/docs/guides/ai/mcp#system-prompt' target='_blank'>default system prompt</a>
-      to guide LLM behavior. Disable to remove or override with your own prompt below."
+      'Use the default system prompt to guide LLM behavior. Disable to remove or override with your own prompt below.'
     mcp_system_prompt: Custom System Prompt
     mcp_system_prompt_note:
       'Custom system prompt to replace the default. Leave empty to use default (if enabled above).'
@@ -1986,9 +1979,8 @@ mcp_prompts_collection_schema:
   messages_role_assistant: Assistant
   messages_role_note: Who is speaking in this message.
   meta_prompts_notice:
-    'Prompts are reusable templates that you can use with LLMs through the Directus MCP server, Flows, or other AI
-    applications. <a href="https://directus.io/docs/guides/ai/mcp/prompts" target="_blank">Learn more about creating
-    effective prompts.</a>'
+    'Prompts are reusable templates that you can use with LLMs through the Directito MCP server, Flows, or other AI
+    applications.'
 expired: Expired
 upcoming: Upcoming
 share: Share

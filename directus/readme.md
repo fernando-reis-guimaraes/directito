@@ -1,6 +1,6 @@
-# uma-directus
+# Directito
 
-Directus 11 fork used by UMA projects.
+Directito is a Directus 11 fork used by UMA projects.
 
 This fork keeps the upstream Directus codebase as close as possible to the official project, with small targeted patches
 needed by UMA deployments.
@@ -10,7 +10,7 @@ needed by UMA deployments.
 Published image:
 
 ```text
-docker.io/umappsnet/uma-directus
+docker.io/umappsnet/directito
 ```
 
 The release workflow publishes a multi-architecture image for:
@@ -51,12 +51,12 @@ password set. No additional environment variable is required to enable this beha
 This does not allow multiple external providers for the same user. For example, a user configured with Google is not
 allowed to log in through Microsoft.
 
-
 ### Upload cancellation confirmation
 
 This fork protects long-running file uploads from accidental cancellation.
 
-When a file upload is in progress, closing the upload dialog through `Esc`, outside click, or the modal cancel button now asks for browser-native confirmation before aborting the upload.
+When a file upload is in progress, closing the upload dialog through `Esc`, outside click, or the modal cancel button
+now asks for browser-native confirmation before aborting the upload.
 
 Current confirmation text:
 
@@ -64,11 +64,12 @@ Current confirmation text:
 Cancel Upload?
 ```
 
-This is intentionally short and language-neutral enough for English, Portuguese, and Spanish while the feature is being validated. It can later be replaced by a styled Directus confirmation dialog and proper i18n strings.
+This is intentionally short and language-neutral enough for English, Portuguese, and Spanish while the feature is being
+validated. It can later be replaced by a styled Directito confirmation dialog and proper i18n strings.
 
 ### TUS upload retry patch
 
-This fork enables retry support for Directus Studio resumable uploads using `tus-js-client`.
+This fork enables retry support for Directito Studio resumable uploads using `tus-js-client`.
 
 By default, failed TUS chunk uploads are retried with exponential delays:
 
@@ -100,7 +101,7 @@ Client-side errors such as unauthorized, forbidden, not found, invalid payload, 
 Use the local build script from the repository root:
 
 ```bash
-./scripts/build-docker-image-local.sh uma-directus
+./scripts/build-docker-image-local.sh directito
 ```
 
 For a normal local validation build, answer `N` to push and type:
@@ -129,18 +130,18 @@ Ubuntu x86_64: linux/amd64
 You can also force a platform manually:
 
 ```bash
-PLATFORMS=linux/arm64 ./scripts/build-docker-image-local.sh uma-directus
+PLATFORMS=linux/arm64 ./scripts/build-docker-image-local.sh directito
 ```
 
 or:
 
 ```bash
-PLATFORMS=linux/amd64 ./scripts/build-docker-image-local.sh uma-directus
+PLATFORMS=linux/amd64 ./scripts/build-docker-image-local.sh directito
 ```
 
 ## Dockerfile validation
 
-The Dockerfile builds the Directus workspace and production image.
+The Dockerfile builds the Directito workspace and production image.
 
 It runs:
 
@@ -150,7 +151,7 @@ pnpm run build
 pnpm --filter directus deploy --legacy --prod dist
 ```
 
-This validates dependency installation, TypeScript/build output, Studio build, and Directus package deployment.
+This validates dependency installation, TypeScript/build output, Studio build, and Directito package deployment.
 
 It does not run the full test suite unless explicit test commands are added to the Dockerfile.
 
@@ -196,19 +197,19 @@ GitHub Actions will then build and push the Docker image.
 For a tag like:
 
 ```text
-v11.17.4-uma.1
+v11.17.4-directito.1
 ```
 
 Expected Docker image tag:
 
 ```text
-docker.io/umappsnet/uma-directus:11.17.4-uma.1
+docker.io/umappsnet/directito:11.17.4-directito.1
 ```
 
 Because this is a prerelease-style semver tag, the workflow may also publish:
 
 ```text
-docker.io/umappsnet/uma-directus:canary
+docker.io/umappsnet/directito:canary
 ```
 
 Use the explicit version tag in production.
@@ -232,7 +233,7 @@ DOCKERHUB_PASSWORD
 Pin the image version explicitly:
 
 ```yaml
-image: umappsnet/uma-directus:11.17.4-uma.1
+image: umappsnet/directito:11.17.4-directito.1
 ```
 
 Avoid using `latest` in production.

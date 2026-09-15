@@ -2,13 +2,11 @@
 	"name": "@directus/storage-driver-s3",
 	"version": "12.1.8",
 	"description": "S3 file storage abstraction for `@directus/storage`",
-	"homepage": "https://directus.io",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/directus/directus.git",
+		"url": "https://github.com/ultra-mega-apps/directito.git",
 		"directory": "packages/storage-driver-s3"
 	},
-	"funding": "https://github.com/directus/directus?sponsor=1",
 	"license": "BUSL-1.1",
 	"author": "Rijk van Zanten <rijkvanzanten@me.com>",
 	"type": "module",

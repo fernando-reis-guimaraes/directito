@@ -115,8 +115,9 @@ export const DEFAULTS: Env = {
 	MARKETPLACE_TRUST: 'sandbox',
 
 	TELEMETRY: false,
-	TELEMETRY_URL: 'https://telemetry.directus.io',
-	COMPLIANCE_URL: 'https://telemetry.directus.io',
+	// Directito: no external telemetry endpoint. Keep empty so even opt-in TELEMETRY=true sends nowhere.
+	TELEMETRY_URL: '',
+	COMPLIANCE_URL: '',
 
 	ASSETS_CACHE_TTL: '30d',
 	ASSETS_CACHE_REVALIDATE: false,

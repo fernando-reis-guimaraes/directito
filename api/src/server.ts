@@ -42,8 +42,8 @@ const forkWarningBanner = String.raw`
 | |_| | |  | |/ ___ \    |  _|| |_| |  _ <| . \
  \___/|_|  |_/_/   \_\   |_|   \___/|_| \_\_|\_\
 
-You are running a forked version of Directus.
-Source code: github.com/ultra-mega-apps/uma-directus
+You are running Directito.
+Source code: github.com/ultra-mega-apps/directito
 ==============================================================
 `.trim();
 

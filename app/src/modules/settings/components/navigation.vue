@@ -10,9 +10,7 @@ import VListItemIcon from '@/components/v-list-item-icon.vue';
 import VListItem from '@/components/v-list-item.vue';
 import VList from '@/components/v-list.vue';
 import VTextOverflow from '@/components/v-text-overflow.vue';
-import { DEFAULT_REPORT_BUG_URL, DEFAULT_REPORT_FEATURE_URL } from '@/constants.js';
 import { useServerStore } from '@/stores/server';
-import { useSettingsStore } from '@/stores/settings';
 
 type Link = {
 	icon: string;
@@ -24,7 +22,6 @@ type Link = {
 
 const { t } = useI18n();
 const { info } = storeToRefs(useServerStore());
-const { settings } = storeToRefs(useSettingsStore());
 
 const links = computed<Link[][]>(() => [
 	[
@@ -100,16 +97,6 @@ const links = computed<Link[][]>(() => [
 					to: `/settings/system-logs`,
 				}
 			: undefined,
-		{
-			icon: 'bug_report',
-			name: t('report_bug'),
-			href: settings.value?.report_bug_url ?? DEFAULT_REPORT_BUG_URL,
-		},
-		{
-			icon: 'new_releases',
-			name: t('request_feature'),
-			href: settings.value?.report_feature_url ?? DEFAULT_REPORT_FEATURE_URL,
-		},
 	].filter((link) => link) as Link[],
 ]);
 </script>
@@ -130,10 +117,10 @@ const links = computed<Link[][]>(() => [
 			<VDivider v-if="index !== links.length - 1" :key="index" />
 		</template>
 
-		<VListItem href="https://github.com/directus/directus/releases" class="version">
+		<VListItem href="https://github.com/ultra-mega-apps/directito/releases" class="version">
 			<VListItemIcon><VIcon name="directus" /></VListItemIcon>
 			<VListItemContent>
-				<VTextOverflow class="version" :text="`Directus ${info.version}`" />
+				<VTextOverflow class="version" :text="`Directito ${info.version}`" />
 			</VListItemContent>
 		</VListItem>
 	</VList>

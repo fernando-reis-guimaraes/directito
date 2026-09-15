@@ -3,11 +3,11 @@ set -euo pipefail
 
 base_version="$(node -p "require('./directus/package.json').version")"
 timestamp="$(date '+%Y%m%d%H%M%S')"
-tag="v${base_version}-uma.${timestamp}"
-image_tag="${base_version}-uma.${timestamp}"
+tag="v${base_version}-directito.${timestamp}"
+image_tag="${base_version}-directito.${timestamp}"
 branch="$(git branch --show-current)"
 remote_url="$(git remote get-url origin)"
-docker_image="docker.io/umappsnet/uma-directus:${image_tag}"
+docker_image="docker.io/umappsnet/directito:${image_tag}"
 
 if [ -z "${branch}" ]; then
   echo "Error: detached HEAD. Checkout a branch before releasing." >&2
@@ -15,7 +15,7 @@ if [ -z "${branch}" ]; then
 fi
 
 echo
-echo "Action: create UMA Directus release tag and push it"
+echo "Action: create Directito release tag and push it"
 echo
 echo "Plan:"
 echo "- Repository: $(pwd)"
@@ -76,4 +76,4 @@ echo "Expected Docker image:"
 echo "${docker_image}"
 echo
 echo "Because this is a prerelease tag, the workflow may also publish:"
-echo "docker.io/umappsnet/uma-directus:canary"
+echo "docker.io/umappsnet/directito:canary"

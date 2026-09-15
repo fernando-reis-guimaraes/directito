@@ -132,7 +132,7 @@ export class MailService {
 			.first();
 
 		return {
-			projectName: projectInfo?.project_name || 'Directus',
+			projectName: projectInfo?.project_name || 'Directito',
 			projectColor: projectInfo?.project_color || '#171717',
 			projectLogo: getProjectLogoURL(projectInfo?.project_logo),
 			projectUrl: projectInfo?.project_url || '',

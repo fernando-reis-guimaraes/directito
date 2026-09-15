@@ -41,9 +41,8 @@ characters. By default, this regex is set to `/\s|-|_/g`.
 ## License
 
 This package is licensed under the MIT License. See the
-[LICENSE](https://github.com/directus/directus/blob/main/packages/format-title/license) file for more information.
+[LICENSE](https://github.com/ultra-mega-apps/directito/blob/main/packages/format-title/license) file for more information.
 
 ## Additional Resources
 
-- [Directus Website](https://directus.io)
-- [Directus GitHub Repository](https://github.com/directus/directus)
+- [Directus GitHub Repository](https://github.com/ultra-mega-apps/directito)
