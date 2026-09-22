@@ -7,6 +7,10 @@ export type SettingsModuleBarModule = {
 	locked?: boolean;
 };
 
+export type EmbeddedSiteDisplay = 'external' | 'embedded';
+
+export type EmbeddedSiteAuthentication = 'none' | 'identity' | 'directus-api';
+
 export type SettingsModuleBarLink = {
 	type: 'link';
 	id: string;
@@ -15,6 +19,15 @@ export type SettingsModuleBarLink = {
 	name: string;
 	enabled: boolean;
 	locked?: boolean;
+	/**
+	 * How the link is displayed. Absent (legacy entries) behaves as `external`.
+	 */
+	display?: EmbeddedSiteDisplay;
+	/**
+	 * Authentication handed to the embedded site. Absent (legacy entries) behaves as `none`.
+	 * Only meaningful when `display` is `embedded`.
+	 */
+	authentication?: EmbeddedSiteAuthentication;
 };
 
 export type SettingsStorageAssetPreset = {

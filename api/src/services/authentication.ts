@@ -47,6 +47,94 @@ export class AuthenticationService {
 	}
 
 	/**
+	 * Sign a Directus access token with the shared JWT semantics used by login, refresh,
+	 * and delegated embedded-site tokens. Keeps the payload shape (`DirectusTokenPayload`),
+	 * issuer, secret, and TTL handling in one place so the three issuance paths cannot
+	 * silently diverge.
+	 */
+	private async signAccessToken(
+		tokenPayload: DirectusTokenPayload,
+		ttl: StringValue | number,
+		filterContext: { user?: string; provider?: string; type: 'login' | 'refresh' | 'embedded' },
+	): Promise<{ accessToken: string; expires: number }> {
+		const customClaims = await emitter.emitFilter(
+			'auth.jwt',
+			tokenPayload,
+			{
+				status: 'pending',
+				...filterContext,
+			},
+			{
+				database: this.knex,
+				schema: this.schema,
+				accountability: this.accountability,
+			},
+		);
+
+		const accessToken = jwt.sign(customClaims, getSecret(), {
+			expiresIn: ttl,
+			issuer: 'directus',
+		});
+
+		return { accessToken, expires: getMilliseconds(ttl) };
+	}
+
+	/**
+	 * Issue a short-lived delegated API access token for an already-authenticated user.
+	 *
+	 * Used by the embedded-sites session bridge. The caller must have proven the user's
+	 * authenticated Studio session already (no password required here). The token carries
+	 * the user's current role/app/admin access and is verified by the normal
+	 * `getAccountabilityForToken` middleware path, so effective permissions are identical
+	 * to the user's normal access token.
+	 */
+	async issueDelegatedAccessToken(userId: string): Promise<{ accessToken: string; expires: number }> {
+		const user = await this.knex
+			.select('id', 'role', 'status', 'tfa_secret', 'provider')
+			.from('directus_users')
+			.where('id', userId)
+			.first();
+
+		if (!user || user.status !== 'active') {
+			throw new InvalidCredentialsError();
+		}
+
+		const roles = await fetchRolesTree(user.role, { knex: this.knex });
+
+		const globalAccess = await fetchGlobalAccess(
+			{ roles, user: user.id, ip: this.accountability?.ip ?? null },
+			{ knex: this.knex },
+		);
+
+		const tokenPayload: DirectusTokenPayload = {
+			id: user.id,
+			role: user.role,
+			app_access: globalAccess.app,
+			admin_access: globalAccess.admin,
+		};
+
+		if (!user.tfa_secret) {
+			const roleEnforcement = await this.knex
+				.select('directus_policies.enforce_tfa')
+				.from('directus_users')
+				.leftJoin('directus_roles', 'directus_users.role', 'directus_roles.id')
+				.leftJoin('directus_access', 'directus_roles.id', 'directus_access.role')
+				.leftJoin('directus_policies', 'directus_access.policy', 'directus_policies.id')
+				.where('directus_users.id', user.id)
+				.where('directus_policies.enforce_tfa', true)
+				.first();
+
+			if (roleEnforcement) {
+				tokenPayload.enforce_tfa = true;
+			}
+		}
+
+		const TTL = env['ACCESS_TOKEN_TTL'] as StringValue | number;
+
+		return this.signAccessToken(tokenPayload, TTL, { user: user.id, provider: user.provider, type: 'embedded' });
+	}
+
+	/**
 	 * Retrieve the tokens for a given user email.
 	 *
 	 * Password is optional to allow usage of this function within the SSO flow and extensions. Make sure
@@ -260,27 +348,12 @@ export class AuthenticationService {
 			tokenPayload.session = refreshToken;
 		}
 
-		const customClaims = await emitter.emitFilter(
-			'auth.jwt',
-			tokenPayload,
-			{
-				status: 'pending',
-				user: user?.id,
-				provider: providerName,
-				type: 'login',
-			},
-			{
-				database: this.knex,
-				schema: this.schema,
-				accountability: this.accountability,
-			},
-		);
-
 		const TTL = env[options?.session ? 'SESSION_COOKIE_TTL' : 'ACCESS_TOKEN_TTL'] as StringValue | number;
 
-		const accessToken = jwt.sign(customClaims, getSecret(), {
-			expiresIn: TTL,
-			issuer: 'directus',
+		const { accessToken, expires } = await this.signAccessToken(tokenPayload, TTL, {
+			user: user?.id,
+			provider: providerName,
+			type: 'login',
 		});
 
 		await this.knex('directus_sessions').insert({
@@ -319,7 +392,7 @@ export class AuthenticationService {
 		return {
 			accessToken,
 			refreshToken,
-			expires: getMilliseconds(TTL),
+			expires,
 			id: user.id,
 		};
 	}
@@ -440,27 +513,12 @@ export class AuthenticationService {
 			delete tokenPayload.id;
 		}
 
-		const customClaims = await emitter.emitFilter(
-			'auth.jwt',
-			tokenPayload,
-			{
-				status: 'pending',
-				user: record.user_id,
-				provider: record.user_provider,
-				type: 'refresh',
-			},
-			{
-				database: this.knex,
-				schema: this.schema,
-				accountability: this.accountability,
-			},
-		);
-
 		const TTL = env[options?.session ? 'SESSION_COOKIE_TTL' : 'ACCESS_TOKEN_TTL'] as StringValue | number;
 
-		const accessToken = jwt.sign(customClaims, getSecret(), {
-			expiresIn: TTL,
-			issuer: 'directus',
+		const { accessToken, expires } = await this.signAccessToken(tokenPayload, TTL, {
+			user: record.user_id,
+			provider: record.user_provider,
+			type: 'refresh',
 		});
 
 		if (record.user_id) {
@@ -479,7 +537,7 @@ export class AuthenticationService {
 		return {
 			accessToken,
 			refreshToken: newRefreshToken,
-			expires: getMilliseconds(TTL),
+			expires,
 			id: record.user_id,
 		};
 	}

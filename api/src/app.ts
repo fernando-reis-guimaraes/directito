@@ -25,6 +25,7 @@ import commentsRouter from './controllers/comments.js';
 import dashboardsRouter from './controllers/dashboards.js';
 import deploymentWebhookRouter from './controllers/deployment-webhooks.js';
 import deploymentRouter from './controllers/deployment.js';
+import embeddedSitesRouter from './controllers/embedded-sites.js';
 import extensionsRouter from './controllers/extensions.js';
 import fieldsRouter from './controllers/fields.js';
 import filesRouter from './controllers/files.js';
@@ -329,6 +330,7 @@ export default async function createApp(): Promise<express.Application> {
 	app.use('/comments', commentsRouter);
 	app.use('/dashboards', dashboardsRouter);
 	app.use('/deployments', deploymentRouter);
+	app.use('/embedded-sites', embeddedSitesRouter);
 	app.use('/extensions', extensionsRouter);
 	app.use('/fields', fieldsRouter);
 

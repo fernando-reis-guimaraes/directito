@@ -27,7 +27,11 @@ const modules = computed(() => {
 			if (modulePart.type === 'link') {
 				const link = omit<Record<string, any>>(modulePart, ['url']);
 
-				if (modulePart.url.startsWith('/')) {
+				if (modulePart.display === 'embedded') {
+					// Embedded sites navigate inside the SPA so the Directito shell
+					// (Module Bar, header, back/forward) is retained.
+					link.to = `/embedded/${modulePart.id}`;
+				} else if (modulePart.url.startsWith('/')) {
 					link.to = modulePart.url;
 				} else {
 					link.href = modulePart.url;
