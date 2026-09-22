@@ -3,6 +3,7 @@ import { DeepPartial, Field, Settings, SettingsModuleBarLink, SettingsModuleBarM
 import { assign } from 'lodash';
 import { nanoid } from 'nanoid';
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Draggable from 'vuedraggable';
 import VButton from '@/components/v-button.vue';
 import VDrawer from '@/components/v-drawer.vue';
@@ -23,7 +24,9 @@ type PreviewExtra = {
 
 type PreviewValue = (SettingsModuleBarLink & PreviewExtra) | (SettingsModuleBarModule & PreviewExtra);
 
-const linkFields: DeepPartial<Field>[] = [
+const { t } = useI18n();
+
+const linkFields = computed<DeepPartial<Field>[]>(() => [
 	{
 		field: 'name',
 		name: '$t:name',
@@ -56,7 +59,62 @@ const linkFields: DeepPartial<Field>[] = [
 			},
 		},
 	},
-];
+	{
+		field: 'display',
+		name: '$t:display',
+		meta: {
+			interface: 'select-radio',
+			width: 'half-left',
+			options: {
+				choices: [
+					{
+						text: t('open_externally'),
+						value: 'external',
+					},
+					{
+						text: t('display_inside_directito'),
+						value: 'embedded',
+					},
+				],
+			},
+		},
+	},
+	{
+		field: 'authentication',
+		name: '$t:embedded_authentication',
+		meta: {
+			interface: 'select-radio',
+			width: 'half-right',
+			hidden: true,
+			conditions: [
+				{
+					rule: {
+						display: {
+							_eq: 'embedded',
+						},
+					},
+					hidden: false,
+				},
+			],
+			options: {
+				choices: [
+					{
+						text: t('embedded_authentication_none'),
+						value: 'none',
+					},
+					{
+						text: t('embedded_authentication_identity'),
+						value: 'identity',
+					},
+					{
+						text: t('embedded_authentication_api'),
+						value: 'directus-api',
+					},
+				],
+			},
+		},
+	},
+]);
 
 const props = withDefaults(
 	defineProps<{
@@ -108,7 +166,7 @@ const valuesWithData = computed<PreviewValue[]>({
 });
 
 const isSaveDisabled = computed(() => {
-	for (const field of linkFields) {
+	for (const field of linkFields.value) {
 		if (field.meta?.required && field.field) {
 			const fieldValue = (values.value as Record<string, any>)[field.field];
 			if (fieldValue === null || fieldValue === undefined || fieldValue === '') return true;
@@ -134,8 +192,8 @@ function valueToPreview(value: Settings['module_bar']): PreviewValue[] {
 function previewToValue(preview: PreviewValue[]): Settings['module_bar'] {
 	return preview.map((previewValue) => {
 		if (previewValue.type === 'link') {
-			const { type, id, name, url, icon, enabled, locked } = previewValue;
-			return { type, id, name, url, icon, enabled, locked };
+			const { type, id, name, url, icon, enabled, locked, display, authentication } = previewValue;
+			return { type, id, name, url, icon, enabled, locked, display, authentication };
 		}
 
 		const { type, id, enabled, locked } = previewValue;
@@ -168,6 +226,8 @@ function edit(id: string) {
 			url: '',
 			name: '',
 			icon: '',
+			display: 'external',
+			authentication: 'none',
 		};
 	}
 

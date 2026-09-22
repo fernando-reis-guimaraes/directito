@@ -468,6 +468,16 @@ determined_by_relationship: Determined by Relationship
 add_note: Add a helpful note for users...
 add_link: Add Link
 custom_link: Custom Link
+open_externally: Open externally
+display_inside_directito: Inside Directito
+embedded_authentication: Authentication
+embedded_authentication_none: None
+embedded_authentication_identity: Identity Only
+embedded_authentication_api: Full Directito API Access
+embedded_sites: Embedded Sites
+embedded_site_not_found: This embedded site is not configured or is no longer available.
+embedded_site_invalid_url: The configured site URL is not a valid absolute URL.
+embedded_site_invalid_protocol: The configured site URL uses a protocol that cannot be embedded.
 default_value: Default Value
 standard_field: Standard Field
 single_file: Single File
