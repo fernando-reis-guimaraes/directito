@@ -2,6 +2,7 @@ import { useEnv } from '@directus/env';
 import { ForbiddenError, InvalidCredentialsError, InvalidPayloadError } from '@directus/errors';
 import type {
 	AbstractServiceOptions,
+	Accountability,
 	EmbeddedSiteAuthentication,
 	EmbeddedSiteDisplay,
 	SettingsModuleBarLink,
@@ -10,6 +11,7 @@ import type { Knex } from 'knex';
 import { nanoid } from 'nanoid';
 import { getCache, getCacheValue, setCacheValue } from '../cache.js';
 import getDatabase from '../database/index.js';
+import { useLock } from '../lock/index.js';
 import { AuthenticationService } from './authentication.js';
 
 const env = useEnv();
@@ -48,8 +50,55 @@ type StoredSessionCode = {
 	userId: string;
 	siteId: string;
 	authentication: EmbeddedSiteAuthentication;
+	/**
+	 * Normalized origin (`validateEmbeddedUrl`) of the configured site URL at issuance.
+	 * A code must not redeem after the administrator changes the site to another origin.
+	 */
+	origin: string;
 	expiresAt: number;
+	/**
+	 * Minimum originating accountability context needed to preserve permission semantics
+	 * when the delegated token is issued later from an unauthenticated redeem request.
+	 * Access evaluation consumes `user` (stored above, roles re-resolved at redeem time)
+	 * and `ip`, so only the IP is persisted here.
+	 */
+	accountability: Pick<Accountability, 'ip'>;
 };
+
+/**
+ * In-process serialization chains for code consumption, keyed by code key.
+ *
+ * The distributed lock (`useLock`) serializes consumers across API replicas sharing
+ * the cache backend, but it is a no-op for single-process memory-cache deployments.
+ * Since each memory-cache deployment owns its codes exclusively, chaining concurrent
+ * consumes per key within the process closes the remaining race window there.
+ */
+const consumeChains = new Map<string, Promise<void>>();
+
+async function serializeConsume<T>(key: string, consume: () => Promise<T>): Promise<T> {
+	const previous = consumeChains.get(key) ?? Promise.resolve();
+
+	let release!: () => void;
+
+	const gate = new Promise<void>((resolve) => {
+		release = resolve;
+	});
+
+	const chain = previous.then(() => gate);
+	consumeChains.set(key, chain);
+
+	await previous;
+
+	try {
+		return await consume();
+	} finally {
+		release();
+
+		if (consumeChains.get(key) === chain) {
+			consumeChains.delete(key);
+		}
+	}
+}
 
 /**
  * Legacy Module Bar links carry neither `display` nor `authentication`.
@@ -157,7 +206,7 @@ export class EmbeddedSitesService {
 			throw new ForbiddenError();
 		}
 
-		const { authentication } = await this.resolveEmbeddedSite(siteId);
+		const { authentication, origin } = await this.resolveEmbeddedSite(siteId);
 
 		if (authentication === 'none') {
 			throw new InvalidPayloadError({ reason: `Embedded site "${siteId}" does not use a session bridge` });
@@ -171,7 +220,11 @@ export class EmbeddedSitesService {
 			userId,
 			siteId,
 			authentication,
+			origin,
 			expiresAt: Date.now() + EMBEDDED_SITE_CODE_TTL_MS,
+			accountability: {
+				ip: this.accountability?.ip ?? null,
+			},
 		};
 
 		await setCacheValue(systemCache, sessionCodeKey(code), stored, EMBEDDED_SITE_CODE_TTL_MS);
@@ -180,9 +233,35 @@ export class EmbeddedSitesService {
 	}
 
 	/**
+	 * Atomically consume a one-time session bridge code. At most one concurrent
+	 * redemption can observe the stored record: the distributed lock serializes
+	 * consumers across API replicas sharing the cache backend, and the in-process
+	 * chain covers single-process memory-cache deployments.
+	 *
+	 * @returns The stored record, or `undefined` when already consumed or unknown.
+	 */
+	private async consumeSessionCode(code: string): Promise<StoredSessionCode | undefined> {
+		const key = sessionCodeKey(code);
+
+		return serializeConsume(key, () =>
+			useLock().usingLock(key, async () => {
+				const { systemCache } = getCache();
+
+				const stored = (await getCacheValue(systemCache, key)) as StoredSessionCode | undefined;
+
+				if (!stored) return undefined;
+
+				await systemCache.delete(key);
+
+				return stored;
+			}),
+		);
+	}
+
+	/**
 	 * Redeem a one-time session bridge code for identity (and, when configured, a
-	 * delegated API access token). The code is single-use: it is deleted before any
-	 * credential is issued so it can never be redeemed twice.
+	 * delegated API access token). The code is consumed atomically before any
+	 * credential is issued so it can never be redeemed twice, even concurrently.
 	 */
 	async redeemSessionCode(
 		siteId: string,
@@ -201,22 +280,18 @@ export class EmbeddedSitesService {
 			throw new InvalidCredentialsError();
 		}
 
-		const { systemCache } = getCache();
-
-		const stored = (await getCacheValue(systemCache, sessionCodeKey(code))) as StoredSessionCode | undefined;
-
-		// Single-use: remove the code before doing anything else.
-		await systemCache.delete(sessionCodeKey(code));
+		const stored = await this.consumeSessionCode(code);
 
 		if (!stored || stored.siteId !== siteId || stored.expiresAt < Date.now()) {
 			throw new InvalidCredentialsError();
 		}
 
-		// Re-resolve the configuration server-side so a changed/disabled entry or a
-		// changed authentication mode invalidates outstanding codes.
-		const { authentication } = await this.resolveEmbeddedSite(siteId);
+		// Re-resolve the configuration server-side so a changed/disabled entry, a
+		// changed authentication mode, or a changed site origin invalidates
+		// outstanding codes.
+		const { authentication, origin } = await this.resolveEmbeddedSite(siteId);
 
-		if (authentication !== stored.authentication) {
+		if (authentication !== stored.authentication || origin !== stored.origin) {
 			throw new InvalidCredentialsError();
 		}
 
@@ -232,7 +307,12 @@ export class EmbeddedSitesService {
 			knex: this.knex,
 		});
 
-		const { accessToken, expires } = await authenticationService.issueDelegatedAccessToken(user.id);
+		// Issue with the originating accountability context captured at code creation,
+		// not the anonymous redeem request's context, so IP-sensitive policies
+		// evaluate exactly as they would for the user's normal access token.
+		const { accessToken, expires } = await authenticationService.issueDelegatedAccessToken(user.id, {
+			ip: stored.accountability.ip,
+		});
 
 		return {
 			authentication: 'directus-api',

@@ -87,8 +87,16 @@ export class AuthenticationService {
 	 * the user's current role/app/admin access and is verified by the normal
 	 * `getAccountabilityForToken` middleware path, so effective permissions are identical
 	 * to the user's normal access token.
+	 *
+	 * Pass the originating accountability context (e.g. the IP captured when the
+	 * one-time bridge code was created) so IP-sensitive policies evaluate exactly as
+	 * they would for the user's normal access token, even though issuance happens
+	 * from an unauthenticated redeem request.
 	 */
-	async issueDelegatedAccessToken(userId: string): Promise<{ accessToken: string; expires: number }> {
+	async issueDelegatedAccessToken(
+		userId: string,
+		options?: { ip?: string | null },
+	): Promise<{ accessToken: string; expires: number }> {
 		const user = await this.knex
 			.select('id', 'role', 'status', 'tfa_secret', 'provider')
 			.from('directus_users')
@@ -102,7 +110,7 @@ export class AuthenticationService {
 		const roles = await fetchRolesTree(user.role, { knex: this.knex });
 
 		const globalAccess = await fetchGlobalAccess(
-			{ roles, user: user.id, ip: this.accountability?.ip ?? null },
+			{ roles, user: user.id, ip: options?.ip ?? this.accountability?.ip ?? null },
 			{ knex: this.knex },
 		);
 

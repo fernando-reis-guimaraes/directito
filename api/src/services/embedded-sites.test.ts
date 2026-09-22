@@ -150,11 +150,11 @@ describe('Services / EmbeddedSites', () => {
 		}
 	};
 
-	const createService = (userId: string | null = mockUser.id) =>
+	const createService = (userId: string | null = mockUser.id, ip: string | null = null) =>
 		new EmbeddedSitesService({
 			knex: db,
 			schema,
-			accountability: userId ? ({ user: userId } as any) : null,
+			accountability: userId ? ({ user: userId, ip } as any) : null,
 		});
 
 	describe('normalizeEmbeddedLink', () => {
@@ -386,6 +386,82 @@ describe('Services / EmbeddedSites', () => {
 			await createService().redeemSessionCode('site-grafana', code);
 
 			await expect(createService().redeemSessionCode('site-grafana', code)).rejects.toThrow(InvalidCredentialsError);
+		});
+
+		it('allows exactly one success under concurrent redemption', async () => {
+			const { code } = await issueCode(identitySite);
+
+			queueSettings([identitySite, identitySite]);
+			queueUsers(mockUser, mockUser);
+
+			const results = await Promise.allSettled(
+				Array.from({ length: 5 }, () => createService().redeemSessionCode('site-grafana', code)),
+			);
+
+			const fulfilled = results.filter((result) => result.status === 'fulfilled');
+			const rejected = results.filter((result) => result.status === 'rejected');
+
+			expect(fulfilled).toHaveLength(1);
+			expect(rejected).toHaveLength(4);
+
+			for (const result of rejected) {
+				expect((result as PromiseRejectedResult).reason).toBeInstanceOf(InvalidCredentialsError);
+			}
+		});
+
+		it('succeeds when the configured origin is unchanged', async () => {
+			const { code } = await issueCode(identitySite);
+
+			queueSettings([identitySite]);
+			queueUsers(mockUser);
+
+			const result = await createService().redeemSessionCode('site-grafana', code);
+
+			expect(result.authentication).toBe('identity');
+		});
+
+		it('rejects a code after the configured origin changed', async () => {
+			const { code } = await issueCode(identitySite);
+
+			queueSettings([{ ...identitySite, url: 'https://evil.example.com' }]);
+
+			await expect(createService().redeemSessionCode('site-grafana', code)).rejects.toThrow(InvalidCredentialsError);
+		});
+
+		it('remains valid after a path-only URL change on the same origin', async () => {
+			const { code } = await issueCode(identitySite);
+
+			queueSettings([{ ...identitySite, url: 'https://grafana.example.com/app-b' }]);
+			queueUsers(mockUser);
+
+			const result = await createService().redeemSessionCode('site-grafana', code);
+
+			expect(result.authentication).toBe('identity');
+		});
+
+		it('evaluates access with the originating IP, not the redeem request IP', async () => {
+			queueSettings([apiSite]);
+			const { code } = await createService(mockUser.id, '203.0.113.7').createSessionCode('site-chat');
+
+			queueSettings([apiSite]);
+			queueUsers(mockUser, mockUser, []);
+
+			// The redeem request is unauthenticated and arrives from another IP.
+			const redeemer = new EmbeddedSitesService({
+				knex: db,
+				schema,
+				accountability: { ip: '198.51.100.9' } as any,
+			});
+
+			const result = await redeemer.redeemSessionCode('site-chat', code);
+			expect(result.authentication).toBe('directus-api');
+
+			const calls = vi.mocked(fetchGlobalAccess).mock.calls;
+			expect(calls.length).toBeGreaterThan(0);
+
+			for (const [accountability] of calls) {
+				expect((accountability as { ip?: string | null }).ip).toBe('203.0.113.7');
+			}
 		});
 
 		it('rejects expired codes', async () => {
