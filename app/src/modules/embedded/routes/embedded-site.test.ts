@@ -116,8 +116,18 @@ describe('EmbeddedSiteView', () => {
 		});
 
 		const iframe = wrapper.find('iframe');
+		const sandbox = iframe.attributes('sandbox') ?? '';
+		const tokens = sandbox.split(/\s+/).filter(Boolean);
 
-		expect(iframe.attributes('sandbox')).toContain('allow-scripts');
+		expect(iframe.attributes('sandbox')).toBeTruthy();
+		expect(tokens).toContain('allow-scripts');
+		expect(tokens).toContain('allow-same-origin');
+		expect(tokens).toContain('allow-forms');
+		expect(tokens).toContain('allow-popups');
+		expect(tokens).toContain('allow-downloads');
+		expect(tokens).toContain('allow-popups-to-escape-sandbox');
+		expect(tokens).not.toContain('allow-top-navigation');
+		expect(tokens).not.toContain('allow-top-navigation-by-user-activation');
 		expect(iframe.attributes('allow')).toBeTruthy();
 		expect(iframe.attributes('referrerpolicy')).toBe('strict-origin-when-cross-origin');
 	});

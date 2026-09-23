@@ -95,7 +95,7 @@ function openExternally() {
 				class="embedded-frame"
 				:src="site.url"
 				:title="siteName ?? site.id"
-				sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-downloads"
+				sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-downloads"
 				allow="clipboard-read; clipboard-write; fullscreen; geolocation; microphone; camera; autoplay"
 				referrerpolicy="strict-origin-when-cross-origin"
 			/>
