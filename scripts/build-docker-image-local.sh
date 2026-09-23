@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-default_image="docker.io/umappsnet/directito"
+default_image="cr.umapps.net/umapps/directito"
 docker_image="${1:-}"
 platforms="${PLATFORMS:-linux/amd64,linux/arm64}"
 
