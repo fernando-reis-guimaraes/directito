@@ -13,12 +13,15 @@ import { useSafeRedirect } from '@/composables/use-safe-redirect';
 import { useTFASetup } from '@/composables/use-tfa-setup';
 import { DEFAULT_AUTH_DRIVER } from '@/constants';
 import { router } from '@/router';
+import { useSettingsStore } from '@/stores/settings';
 import { useUserStore } from '@/stores/user';
+import { resolvePostLoginDestination } from '@/utils/post-login-destination';
 import PublicView from '@/views/public/public-view.vue';
 
 const { t } = useI18n();
 const appStore = useAppStore();
 const userStore = useUserStore();
+const settingsStore = useSettingsStore();
 
 const { redirect, resolveRedirect } = useSafeRedirect();
 
@@ -113,7 +116,12 @@ async function cancel() {
 }
 
 function navigateAfterTFA() {
-	const fallback = (userStore.currentUser as User)?.last_page || '/login';
+	const fallback = resolvePostLoginDestination(
+		undefined,
+		settingsStore.settings?.homepage_path,
+		(userStore.currentUser as User)?.last_page,
+		'/login',
+	);
 
 	// If the redirect was validated as an absolute URL (public URL will be relative), navigate via window.location
 	if (redirect.value && /^(https?:)?\/\//.test(redirect.value)) {

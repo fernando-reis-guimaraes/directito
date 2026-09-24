@@ -25,6 +25,14 @@ fields:
       placeholder: https://example.com
     width: half
 
+  - field: homepage_path
+    interface: input
+    note: $t:fields.directus_settings.homepage_path_note
+    options:
+      iconRight: home
+      placeholder: /content
+    width: half
+
   - field: default_language
     interface: system-language
     options:

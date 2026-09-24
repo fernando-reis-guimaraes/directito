@@ -8,6 +8,7 @@ export type DirectusSettings<Schema = any> = MergeCoreCollection<
 		id: 1;
 		project_name: string;
 		project_url: string;
+		homepage_path: string | null;
 		report_error_url: string | null;
 		report_bug_url: string | null;
 		report_feature_url: string | null;

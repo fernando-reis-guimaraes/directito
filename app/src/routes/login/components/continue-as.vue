@@ -7,6 +7,8 @@ import { logout } from '@/auth';
 import VButton from '@/components/v-button.vue';
 import VProgressCircular from '@/components/v-progress-circular.vue';
 import { hydrate } from '@/hydrate';
+import { useSettingsStore } from '@/stores/settings';
+import { resolvePostLoginDestination } from '@/utils/post-login-destination';
 import { unexpectedError } from '@/utils/unexpected-error';
 import { userName } from '@/utils/user-name';
 
@@ -51,7 +53,8 @@ async function hydrateAndLogin() {
 	await hydrate();
 	await userPromise;
 	const redirectQuery = router.currentRoute.value.query.redirect as string;
-	router.push(redirectQuery || lastPage.value || `/content`);
+	const homepagePath = useSettingsStore().settings?.homepage_path;
+	router.push(resolvePostLoginDestination(redirectQuery, homepagePath, lastPage.value));
 }
 </script>
 
