@@ -1,18 +1,23 @@
 import type { OwnerInformation } from '@directus/types';
+import { InvalidPayloadError } from '@directus/errors';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { sendReport } from '../telemetry/index.js';
 import { SettingsService } from './settings.js';
 
-const { upsertSingleton, select, update } = vi.hoisted(() => ({
+const { upsertSingleton, select, update, createOne, updateMany } = vi.hoisted(() => ({
 	upsertSingleton: vi.fn(),
 	select: vi.fn(),
 	update: vi.fn(),
+	createOne: vi.fn(),
+	updateMany: vi.fn(),
 }));
 
 vi.mock('./items.js', () => ({
 	ItemsService: class {
 		knex = { select, update };
 		upsertSingleton = upsertSingleton;
+		createOne = createOne;
+		updateMany = updateMany;
 	},
 }));
 
@@ -62,4 +67,79 @@ test('Preserves local persistence failures without reporting or retry writes', a
 	expect(update).not.toHaveBeenCalled();
 	expect(sendReport).not.toHaveBeenCalled();
 	expect(fetch).not.toHaveBeenCalled();
+});
+
+test('createOne persists a valid homepage_path unchanged', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	createOne.mockResolvedValue(1);
+
+	await expect(service.createOne({ homepage_path: '/embedded/site-id' })).resolves.toBe(1);
+	expect(createOne).toHaveBeenCalledExactlyOnceWith({ homepage_path: '/embedded/site-id' }, {});
+});
+
+test('createOne trims a valid homepage_path before persisting', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	createOne.mockResolvedValue(1);
+
+	await expect(service.createOne({ homepage_path: '  /content  ' })).resolves.toBe(1);
+	expect(createOne).toHaveBeenCalledExactlyOnceWith({ homepage_path: '/content' }, {});
+});
+
+test('createOne stores null for an empty homepage_path', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	createOne.mockResolvedValue(1);
+
+	await expect(service.createOne({ homepage_path: '   ' })).resolves.toBe(1);
+	expect(createOne).toHaveBeenCalledExactlyOnceWith({ homepage_path: null }, {});
+});
+
+test('createOne passes data without homepage_path through untouched', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	createOne.mockResolvedValue(1);
+
+	await expect(service.createOne({ project_name: 'Test' })).resolves.toBe(1);
+	expect(createOne).toHaveBeenCalledExactlyOnceWith({ project_name: 'Test' }, {});
+});
+
+test.each([
+	'https://example.com',
+	'http://example.com',
+	'//example.com',
+	'javascript:alert(1)',
+	'data:text/html,hi',
+	'/\\example.com',
+	'/content\\foo',
+	'content',
+])('createOne rejects invalid homepage_path %p before persisting', async (homepage_path) => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+
+	await expect(service.createOne({ homepage_path })).rejects.toBeInstanceOf(InvalidPayloadError);
+	expect(createOne).not.toHaveBeenCalled();
+});
+
+test('updateMany rejects an invalid homepage_path before persisting', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+
+	await expect(service.updateMany([1], { homepage_path: 'https://example.com' })).rejects.toBeInstanceOf(
+		InvalidPayloadError,
+	);
+	expect(updateMany).not.toHaveBeenCalled();
+});
+
+test('updateMany persists a valid homepage_path', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	updateMany.mockResolvedValue([1]);
+
+	await expect(service.updateMany([1], { homepage_path: '/content/turmas/123?tab=alunos#lista' })).resolves.toEqual([
+		1,
+	]);
+	expect(updateMany).toHaveBeenCalledExactlyOnceWith([1], { homepage_path: '/content/turmas/123?tab=alunos#lista' }, {});
+});
+
+test('updateMany allows null homepage_path (disabled)', async () => {
+	const service = new SettingsService({ schema: { collections: {}, relations: [] } });
+	updateMany.mockResolvedValue([1]);
+
+	await expect(service.updateMany([1], { homepage_path: null })).resolves.toEqual([1]);
+	expect(updateMany).toHaveBeenCalledExactlyOnceWith([1], { homepage_path: null }, {});
 });

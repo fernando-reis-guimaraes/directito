@@ -1605,6 +1605,8 @@ fields:
     project_name: Project Name
     project_descriptor: Project Descriptor
     project_url: Project URL
+    homepage_path: Homepage Path
+    homepage_path_note: 'Internal Data Studio path to open after login. Examples: /content or /embedded/site-id'
     project_color: Project Color
     project_logo: Project Logo
     default_language: Default Language

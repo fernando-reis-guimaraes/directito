@@ -11,7 +11,9 @@ import VNotice from '@/components/v-notice.vue';
 import VTextOverflow from '@/components/v-text-overflow.vue';
 import InterfaceSystemInputPassword from '@/interfaces/_system/system-input-password/input-password.vue';
 import { translateAPIError } from '@/lang';
+import { useSettingsStore } from '@/stores/settings';
 import { useUserStore } from '@/stores/user';
+import { resolvePostLoginDestination } from '@/utils/post-login-destination';
 
 type Credentials = {
 	email: string;
@@ -33,6 +35,7 @@ const error = ref<RequestError | string | null>(null);
 const otp = ref<string | null>(null);
 const requiresTFA = ref(false);
 const userStore = useUserStore();
+const settingsStore = useSettingsStore();
 
 watch(email, () => {
 	if (requiresTFA.value === true) requiresTFA.value = false;
@@ -89,7 +92,9 @@ async function onSubmit() {
 			lastPage = userStore.currentUser.last_page;
 		}
 
-		router.push(redirectQuery || lastPage || '/content');
+		router.push(
+			resolvePostLoginDestination(redirectQuery, settingsStore.settings?.homepage_path, lastPage),
+		);
 	} catch (err: any) {
 		if (err.errors?.[0]?.extensions?.code === 'INVALID_OTP' && requiresTFA.value === false) {
 			requiresTFA.value = true;
