@@ -1398,6 +1398,8 @@ fields:
     project_name: Nome do projeto
     project_descriptor: Descrição do projeto
     project_url: URL do projeto
+    homepage_path: Caminho da Página Inicial
+    homepage_path_note: 'Caminho interno do Data Studio que será aberto após o login. Exemplos: /content ou /embedded/site-id'
     project_color: Cor do projeto
     project_logo: Logotipo do projeto
     default_language: Idioma padrão
