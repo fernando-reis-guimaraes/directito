@@ -6,7 +6,7 @@ docker_image="${1:-}"
 platforms="${PLATFORMS:-linux/amd64,linux/arm64}"
 
 case "$(uname -m)" in
-arm64)
+aarch64 | arm64)
 	local_platform="linux/arm64"
 	;;
 x86_64 | amd64)

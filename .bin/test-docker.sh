@@ -86,7 +86,7 @@ platform="${PLATFORM:-}"
 
 if [ -z "${platform}" ]; then
 	case "$(uname -m)" in
-	arm64)
+	aarch64 | arm64)
 		platform="linux/arm64"
 		;;
 	x86_64 | amd64)
