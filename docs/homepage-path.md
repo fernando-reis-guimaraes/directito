@@ -20,6 +20,9 @@ homepage_path = /content/turmas/123
 - Non-empty = internal Data Studio path used as the default destination after login.
 - Any valid internal route is accepted (`/content`, `/users`, `/embedded/<site-id>`, `/content/turmas/123`,
   paths with query strings or hashes). The route is not required to exist at validation time.
+- Values are validated **before persisting**: saving an invalid value (`https://…`, `//…`, `javascript:`/`data:`
+  schemes, backslashes, or anything not starting with a single `/`) fails immediately with an `INVALID_PAYLOAD`
+  error. Empty or whitespace-only input is stored as `null` (disabled).
 
 ## Post-login precedence
 
