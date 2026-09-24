@@ -28,6 +28,7 @@ export * from './is-valid-json.js';
 export * from './is-vue-component.js';
 export * from './merge-filters.js';
 export * from './move-in-array.js';
+export * from './normalize-homepage-path.js';
 export * from './normalize-path.js';
 export * from './number-generator.js';
 export * from './parse-filter-function-path.js';
