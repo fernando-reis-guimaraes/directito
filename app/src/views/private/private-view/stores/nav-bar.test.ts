@@ -1,9 +1,12 @@
 import { createPinia, setActivePinia } from 'pinia';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type Ref, ref } from 'vue';
-import { useNavBarStore } from './nav-bar';
+import { afterEach, beforeEach, describe, expect, it, test, vi } from 'vitest';
+import { nextTick, reactive, type Ref, ref } from 'vue';
+import { moduleOfPath, useNavBarStore } from './nav-bar';
 
 const storageRefs = new Map<string, Ref>();
+const route = reactive({ fullPath: '/content' });
+const lg = ref(true);
+const xl = ref(true);
 
 vi.mock('@vueuse/core', async () => {
 	const actual = await vi.importActual<typeof import('@vueuse/core')>('@vueuse/core');
@@ -15,22 +18,20 @@ vi.mock('@vueuse/core', async () => {
 			storageRefs.set(key, r);
 			return r;
 		},
-		useBreakpoints: () => ({
-			lg: ref(true),
-			xl: ref(true),
-		}),
+		useBreakpoints: () => ({ lg, xl }),
 	};
 });
 
 vi.mock('vue-router', () => ({
-	useRoute: () => ({
-		fullPath: ref('/'),
-	}),
+	useRoute: () => route,
 }));
 
 beforeEach(() => {
 	storageRefs.clear();
 	setActivePinia(createPinia());
+	route.fullPath = '/content';
+	lg.value = true;
+	xl.value = true;
 });
 
 afterEach(() => {
@@ -81,5 +82,87 @@ describe('nav-bar store size guard', () => {
 		storedSize.value = NaN;
 		expect(store.size).toBe(225);
 		expect(storedSize.value).toBe(225);
+	});
+});
+
+describe('moduleOfPath', () => {
+	test('extracts the first path segment', () => {
+		expect(moduleOfPath('/content')).toBe('content');
+		expect(moduleOfPath('/content/articles')).toBe('content');
+		expect(moduleOfPath('/users/123')).toBe('users');
+		expect(moduleOfPath('/settings/project')).toBe('settings');
+		expect(moduleOfPath('/embedded/my-site')).toBe('embedded');
+	});
+
+	test('ignores query strings and hashes', () => {
+		expect(moduleOfPath('/content?page=2')).toBe('content');
+		expect(moduleOfPath('/insights/1#section')).toBe('insights');
+		expect(moduleOfPath('/files?sort=name#top')).toBe('files');
+	});
+
+	test('returns empty string for the root path', () => {
+		expect(moduleOfPath('/')).toBe('');
+	});
+});
+
+describe('nav-bar store module navigation', () => {
+	test('reopens the nav when switching modules', async () => {
+		const store = useNavBarStore();
+		store.collapse();
+		expect(store.collapsed).toBe(true);
+
+		route.fullPath = '/users';
+		await nextTick();
+
+		expect(store.collapsed).toBe(false);
+	});
+
+	test('keeps a collapsed nav on same-module navigation', async () => {
+		const store = useNavBarStore();
+		store.collapse();
+
+		route.fullPath = '/content/articles';
+		await nextTick();
+
+		expect(store.collapsed).toBe(true);
+	});
+
+	test('keeps a collapsed nav on query-only changes', async () => {
+		const store = useNavBarStore();
+		store.collapse();
+
+		route.fullPath = '/content?page=2';
+		await nextTick();
+
+		expect(store.collapsed).toBe(true);
+	});
+
+	test('still collapses on route change when nav is not inline (mobile)', async () => {
+		lg.value = false;
+		xl.value = false;
+
+		const store = useNavBarStore();
+		store.expand();
+		expect(store.collapsed).toBe(false);
+
+		route.fullPath = '/users';
+		await nextTick();
+
+		expect(store.collapsed).toBe(true);
+	});
+
+	test('expandForModuleNavigation reopens only when inline', () => {
+		const store = useNavBarStore();
+		store.collapse();
+
+		store.expandForModuleNavigation();
+		expect(store.collapsed).toBe(false);
+
+		store.collapse();
+
+		lg.value = false;
+		xl.value = false;
+		store.expandForModuleNavigation();
+		expect(store.collapsed).toBe(true);
 	});
 });

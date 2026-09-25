@@ -9,8 +9,10 @@ import { MODULE_BAR_DEFAULT } from '@/constants';
 import { useExtensions } from '@/extensions';
 import { useSettingsStore } from '@/stores/settings';
 import { translate } from '@/utils/translate-object-values';
+import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
 
 const settingsStore = useSettingsStore();
+const navBarStore = useNavBarStore();
 const { modules: registeredModules } = useExtensions();
 
 const registeredModuleIDs = computed(() => registeredModules.value.map((module) => module.id));
@@ -65,6 +67,7 @@ const modules = computed(() => {
 				:to="modulePart.to"
 				:href="modulePart.href"
 				tile
+				@click="navBarStore.expandForModuleNavigation()"
 			>
 				<VIcon :name="modulePart.icon" />
 			</VButton>

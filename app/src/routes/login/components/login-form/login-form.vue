@@ -14,6 +14,7 @@ import { translateAPIError } from '@/lang';
 import { useSettingsStore } from '@/stores/settings';
 import { useUserStore } from '@/stores/user';
 import { resolvePostLoginDestination } from '@/utils/post-login-destination';
+import { applyPostLoginSidebarState } from '@/utils/post-login-sidebar';
 
 type Credentials = {
 	email: string;
@@ -92,9 +93,9 @@ async function onSubmit() {
 			lastPage = userStore.currentUser.last_page;
 		}
 
-		router.push(
-			resolvePostLoginDestination(redirectQuery, settingsStore.settings?.homepage_path, lastPage),
-		);
+		await router.push(resolvePostLoginDestination(redirectQuery, settingsStore.settings?.homepage_path, lastPage));
+
+		applyPostLoginSidebarState(settingsStore.settings);
 	} catch (err: any) {
 		if (err.errors?.[0]?.extensions?.code === 'INVALID_OTP' && requiresTFA.value === false) {
 			requiresTFA.value = true;

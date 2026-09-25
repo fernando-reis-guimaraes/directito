@@ -16,6 +16,7 @@ import { router } from '@/router';
 import { useSettingsStore } from '@/stores/settings';
 import { useUserStore } from '@/stores/user';
 import { resolvePostLoginDestination } from '@/utils/post-login-destination';
+import { applyPostLoginSidebarState } from '@/utils/post-login-sidebar';
 import PublicView from '@/views/public/public-view.vue';
 
 const { t } = useI18n();
@@ -115,7 +116,7 @@ async function cancel() {
 	navigateAfterTFA();
 }
 
-function navigateAfterTFA() {
+async function navigateAfterTFA() {
 	const fallback = resolvePostLoginDestination(
 		undefined,
 		settingsStore.settings?.homepage_path,
@@ -127,8 +128,10 @@ function navigateAfterTFA() {
 	if (redirect.value && /^(https?:)?\/\//.test(redirect.value)) {
 		window.location.href = redirect.value;
 	} else {
-		router.push(redirect.value ?? fallback);
+		await router.push(redirect.value ?? fallback);
 	}
+
+	applyPostLoginSidebarState(settingsStore.settings);
 }
 
 useHead({

@@ -16,8 +16,16 @@ vi.mock('./items.js', () => ({
 	ItemsService: class {
 		knex = { select, update };
 		upsertSingleton = upsertSingleton;
-		createOne = createOne;
-		updateMany = updateMany;
+
+		// NOTE: prototype methods (not instance fields) so subclass overrides
+		// such as SettingsService.createOne/updateMany still win.
+		createOne(...args: any[]) {
+			return createOne(...args);
+		}
+
+		updateMany(...args: any[]) {
+			return updateMany(...args);
+		}
 	},
 }));
 

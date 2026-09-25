@@ -52,6 +52,8 @@ export type Settings = {
 	project_descriptor: string | null;
 	project_url: string | null;
 	homepage_path: string | null;
+	homepage_navbar_open: boolean;
+	homepage_sidebar_open: boolean;
 	report_error_url: string | null;
 	report_bug_url: string | null;
 	report_feature_url: string | null;

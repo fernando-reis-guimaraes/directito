@@ -9,6 +9,7 @@ import { Tooltip } from '@/__utils__/tooltip';
 import type { GlobalMountOptions } from '@/__utils__/types';
 import VButton from '@/components/v-button.vue';
 import { i18n } from '@/lang';
+import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
 
 const moduleBar = [
 	{ type: 'module', id: 'content', enabled: true },
@@ -122,5 +123,18 @@ describe('ModuleBar custom links', () => {
 		});
 
 		expect(embedded).toHaveLength(2);
+	});
+
+	it('reopens the left navigation when a module is clicked', async () => {
+		const wrapper = mount(ModuleBar, { global });
+
+		const navBarStore = useNavBarStore();
+
+		const buttons = wrapper.findAllComponents(VButton);
+		// VButton renders the clickable element inside its root: dispatch the
+		// click there so VButton emits `click` like in a real browser.
+		await buttons[0]!.find('a,button').trigger('click');
+
+		expect(navBarStore.expandForModuleNavigation).toHaveBeenCalled();
 	});
 });

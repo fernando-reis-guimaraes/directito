@@ -33,6 +33,20 @@ fields:
       placeholder: /content
     width: half
 
+  - field: homepage_navbar_open
+    interface: boolean
+    note: $t:fields.directus_settings.homepage_navbar_open_note
+    width: half
+    options:
+      label: $t:fields.directus_settings.homepage_navbar_open
+
+  - field: homepage_sidebar_open
+    interface: boolean
+    note: $t:fields.directus_settings.homepage_sidebar_open_note
+    width: half
+    options:
+      label: $t:fields.directus_settings.homepage_sidebar_open
+
   - field: default_language
     interface: system-language
     options:

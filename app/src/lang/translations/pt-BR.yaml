@@ -1400,6 +1400,10 @@ fields:
     project_url: URL do projeto
     homepage_path: Caminho da Página Inicial
     homepage_path_note: 'Caminho interno do Data Studio que será aberto após o login. Exemplos: /content ou /embedded/site-id'
+    homepage_navbar_open: Abrir navegação esquerda após o login
+    homepage_navbar_open_note: 'Quando ativado, a navegação esquerda inicia aberta após o login. Quando desativado, inicia fechada.'
+    homepage_sidebar_open: Abrir barra lateral direita após o login
+    homepage_sidebar_open_note: 'Quando ativado, a barra lateral direita inicia aberta após o login. Quando desativado, inicia fechada.'
     project_color: Cor do projeto
     project_logo: Logotipo do projeto
     default_language: Idioma padrão
