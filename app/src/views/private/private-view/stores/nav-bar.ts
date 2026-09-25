@@ -58,6 +58,16 @@ export const useNavBarStore = defineStore('nav-bar-store', () => {
 
 			const mod = moduleOfPath(fullPath);
 
+			// Entering an embedded site (iframe opened inside Directito via the
+			// module bar) always collapses the left navigation to give the frame
+			// maximum width. Every other module keeps the previous behavior of
+			// reopening the nav on module switch.
+			if (mod === 'embedded') {
+				previousModule.value = mod;
+				collapse();
+				return;
+			}
+
 			// Switching modules (Content, Users, Files, Insights, Settings, …)
 			// always reopens the left navigation: a collapsed nav looks like a
 			// broken or empty page to non-technical users.

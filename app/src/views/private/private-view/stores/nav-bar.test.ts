@@ -165,4 +165,43 @@ describe('nav-bar store module navigation', () => {
 		store.expandForModuleNavigation();
 		expect(store.collapsed).toBe(true);
 	});
+
+	test('collapses the nav when entering an embedded site', async () => {
+		const store = useNavBarStore();
+		store.expand();
+		expect(store.collapsed).toBe(false);
+
+		route.fullPath = '/embedded/site-chat';
+		await nextTick();
+
+		expect(store.collapsed).toBe(true);
+	});
+
+	test('keeps the nav collapsed when switching between embedded sites', async () => {
+		const store = useNavBarStore();
+
+		route.fullPath = '/embedded/site-a';
+		await nextTick();
+		store.collapse();
+		expect(store.collapsed).toBe(true);
+
+		route.fullPath = '/embedded/site-b';
+		await nextTick();
+
+		expect(store.collapsed).toBe(true);
+	});
+
+	test('reopens the nav when leaving an embedded site to another module', async () => {
+		const store = useNavBarStore();
+
+		route.fullPath = '/embedded/site-chat';
+		await nextTick();
+		store.collapse();
+		expect(store.collapsed).toBe(true);
+
+		route.fullPath = '/content/articles';
+		await nextTick();
+
+		expect(store.collapsed).toBe(false);
+	});
 });

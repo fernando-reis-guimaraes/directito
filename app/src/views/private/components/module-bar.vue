@@ -10,9 +10,11 @@ import { useExtensions } from '@/extensions';
 import { useSettingsStore } from '@/stores/settings';
 import { translate } from '@/utils/translate-object-values';
 import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
+import { useSidebarStore } from '@/views/private/private-view/stores/sidebar';
 
 const settingsStore = useSettingsStore();
 const navBarStore = useNavBarStore();
+const sidebarStore = useSidebarStore();
 const { modules: registeredModules } = useExtensions();
 
 const registeredModuleIDs = computed(() => registeredModules.value.map((module) => module.id));
@@ -51,6 +53,30 @@ const modules = computed(() => {
 			};
 		});
 });
+
+function isEmbeddedEntry(modulePart: Record<string, any>): boolean {
+	return (
+		modulePart?.['display'] === 'embedded' ||
+		(typeof modulePart?.['to'] === 'string' && (modulePart['to'] as string).startsWith('/embedded/'))
+	);
+}
+
+function onModuleClick(modulePart: Record<string, any>, event: MouseEvent) {
+	// New-tab opens (ctrl/cmd+click, middle button) keep the current shell state.
+	if (event.ctrlKey || event.metaKey || event.shiftKey || event.button === 1) return;
+
+	// Embedded sites open in an iframe inside Directito: close both sidebars
+	// (left nav + right sidebar) to give the frame maximum width. Closing here
+	// gives instant feedback; the embedded route itself also collapses and
+	// restores the previous state on leave.
+	if (isEmbeddedEntry(modulePart)) {
+		navBarStore.collapse();
+		sidebarStore.collapse();
+		return;
+	}
+
+	navBarStore.expandForModuleNavigation();
+}
 </script>
 
 <template>
@@ -67,7 +93,7 @@ const modules = computed(() => {
 				:to="modulePart.to"
 				:href="modulePart.href"
 				tile
-				@click="navBarStore.expandForModuleNavigation()"
+				@click="(event) => onModuleClick(modulePart, event)"
 			>
 				<VIcon :name="modulePart.icon" />
 			</VButton>
