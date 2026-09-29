@@ -9,6 +9,8 @@ export type DirectusSettings<Schema = any> = MergeCoreCollection<
 		project_name: string;
 		project_url: string;
 		homepage_path: string | null;
+		homepage_navbar_open: boolean;
+		homepage_sidebar_open: boolean;
 		report_error_url: string | null;
 		report_bug_url: string | null;
 		report_feature_url: string | null;

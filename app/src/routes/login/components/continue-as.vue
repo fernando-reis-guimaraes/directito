@@ -9,6 +9,7 @@ import VProgressCircular from '@/components/v-progress-circular.vue';
 import { hydrate } from '@/hydrate';
 import { useSettingsStore } from '@/stores/settings';
 import { resolvePostLoginDestination } from '@/utils/post-login-destination';
+import { applyPostLoginSidebarState } from '@/utils/post-login-sidebar';
 import { unexpectedError } from '@/utils/unexpected-error';
 import { userName } from '@/utils/user-name';
 
@@ -54,7 +55,8 @@ async function hydrateAndLogin() {
 	await userPromise;
 	const redirectQuery = router.currentRoute.value.query.redirect as string;
 	const homepagePath = useSettingsStore().settings?.homepage_path;
-	router.push(resolvePostLoginDestination(redirectQuery, homepagePath, lastPage.value));
+	await router.push(resolvePostLoginDestination(redirectQuery, homepagePath, lastPage.value));
+	applyPostLoginSidebarState(useSettingsStore().settings);
 }
 </script>
 

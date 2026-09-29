@@ -9,6 +9,8 @@ import { Tooltip } from '@/__utils__/tooltip';
 import type { GlobalMountOptions } from '@/__utils__/types';
 import VButton from '@/components/v-button.vue';
 import { i18n } from '@/lang';
+import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
+import { useSidebarStore } from '@/views/private/private-view/stores/sidebar';
 
 const moduleBar = [
 	{ type: 'module', id: 'content', enabled: true },
@@ -122,5 +124,69 @@ describe('ModuleBar custom links', () => {
 		});
 
 		expect(embedded).toHaveLength(2);
+	});
+
+	it('reopens the left navigation when a module is clicked', async () => {
+		const wrapper = mount(ModuleBar, { global });
+
+		const navBarStore = useNavBarStore();
+
+		const buttons = wrapper.findAllComponents(VButton);
+		// VButton renders the clickable element inside its root: dispatch the
+		// click there so VButton emits `click` like in a real browser.
+		await buttons[0]!.find('a,button').trigger('click');
+
+		expect(navBarStore.expandForModuleNavigation).toHaveBeenCalled();
+	});
+
+	it('collapses both sidebars when an embedded site is clicked', async () => {
+		const wrapper = mount(ModuleBar, { global });
+
+		const navBarStore = useNavBarStore();
+		const sidebarStore = useSidebarStore();
+
+		const buttons = wrapper.findAllComponents(VButton);
+		const grafana = buttons.find((button) => button.props('to') === '/embedded/site-grafana');
+		expect(grafana).toBeDefined();
+
+		await grafana!.find('a,button').trigger('click');
+
+		expect(navBarStore.collapse).toHaveBeenCalled();
+		expect(sidebarStore.collapse).toHaveBeenCalled();
+		expect(navBarStore.expandForModuleNavigation).not.toHaveBeenCalled();
+	});
+
+	it('keeps reopening the left navigation for regular modules and internal links', async () => {
+		const wrapper = mount(ModuleBar, { global });
+
+		const navBarStore = useNavBarStore();
+		const sidebarStore = useSidebarStore();
+
+		const buttons = wrapper.findAllComponents(VButton);
+		const internal = buttons.find((button) => button.props('to') === '/insights/1');
+		expect(internal).toBeDefined();
+
+		await internal!.find('a,button').trigger('click');
+
+		expect(navBarStore.expandForModuleNavigation).toHaveBeenCalled();
+		expect(navBarStore.collapse).not.toHaveBeenCalled();
+		expect(sidebarStore.collapse).not.toHaveBeenCalled();
+	});
+
+	it('does not touch the sidebars when opening an embedded site in a new tab', async () => {
+		const wrapper = mount(ModuleBar, { global });
+
+		const navBarStore = useNavBarStore();
+		const sidebarStore = useSidebarStore();
+
+		const buttons = wrapper.findAllComponents(VButton);
+		const chat = buttons.find((button) => button.props('to') === '/embedded/site-chat');
+		expect(chat).toBeDefined();
+
+		await chat!.find('a,button').trigger('click', { ctrlKey: true });
+
+		expect(navBarStore.collapse).not.toHaveBeenCalled();
+		expect(sidebarStore.collapse).not.toHaveBeenCalled();
+		expect(navBarStore.expandForModuleNavigation).not.toHaveBeenCalled();
 	});
 });

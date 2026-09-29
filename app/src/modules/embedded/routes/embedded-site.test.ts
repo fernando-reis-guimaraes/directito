@@ -2,10 +2,14 @@ import { createTestingPinia } from '@pinia/testing';
 import { mount } from '@vue/test-utils';
 import { setActivePinia } from 'pinia';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Router } from 'vue-router';
 import EmbeddedSiteView from './embedded-site.vue';
+import { generateRouter } from '@/__utils__/router';
 import { Tooltip } from '@/__utils__/tooltip';
 import type { GlobalMountOptions } from '@/__utils__/types';
 import { i18n } from '@/lang';
+import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
+import { useSidebarStore } from '@/views/private/private-view/stores/sidebar';
 
 const moduleBar = [
 	{
@@ -49,6 +53,7 @@ const moduleBar = [
 ];
 
 let global: GlobalMountOptions;
+let router: Router;
 
 beforeEach(() => {
 	const pinia = createTestingPinia({
@@ -60,8 +65,10 @@ beforeEach(() => {
 
 	setActivePinia(pinia);
 
+	router = generateRouter([{ path: '/:pathMatch(.*)*', component: { template: '<div />' } }]);
+
 	global = {
-		plugins: [i18n, pinia],
+		plugins: [i18n, router, pinia],
 		directives: { tooltip: Tooltip },
 		stubs: {
 			PrivateView: {
@@ -161,5 +168,46 @@ describe('EmbeddedSiteView', () => {
 			expect(wrapper.find('iframe').exists()).toBe(false);
 			expect(wrapper.find('.v-notice-stub').exists()).toBe(true);
 		}
+	});
+});
+
+describe('EmbeddedSiteView sidebars', () => {
+	it('collapses both sidebars on entry to give the iframe maximum width', () => {
+		mount(EmbeddedSiteView, {
+			global,
+			props: { siteId: 'site-chat' },
+		});
+
+		expect(useNavBarStore().collapse).toHaveBeenCalled();
+		expect(useSidebarStore().collapse).toHaveBeenCalled();
+	});
+
+	it('restores previously open sidebars on leave (temporary close)', () => {
+		const wrapper = mount(EmbeddedSiteView, {
+			global,
+			props: { siteId: 'site-chat' },
+		});
+
+		wrapper.unmount();
+
+		expect(useNavBarStore().expand).toHaveBeenCalled();
+		expect(useSidebarStore().expand).toHaveBeenCalled();
+	});
+
+	it('keeps both sidebars collapsed when switching between embedded sites', async () => {
+		const wrapper = mount(EmbeddedSiteView, {
+			global,
+			props: { siteId: 'site-chat' },
+		});
+
+		const navBarStore = useNavBarStore();
+		const sidebarStore = useSidebarStore();
+
+		vi.clearAllMocks();
+
+		await wrapper.setProps({ siteId: 'site-public' });
+
+		expect(navBarStore.collapse).toHaveBeenCalled();
+		expect(sidebarStore.collapse).toHaveBeenCalled();
 	});
 });

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import type { SettingsModuleBarLink } from '@directus/types';
-import { computed, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useEmbeddedBridge } from '../composables/use-embedded-bridge';
 import VNotice from '@/components/v-notice.vue';
 import { useSettingsStore } from '@/stores/settings';
 import { translate } from '@/utils/translate-object-values';
 import { PrivateView, PrivateViewHeaderBarActionButton } from '@/views/private';
+import { useNavBarStore } from '@/views/private/private-view/stores/nav-bar';
+import { useSidebarStore } from '@/views/private/private-view/stores/sidebar';
 
 const props = withDefaults(
 	defineProps<{
@@ -15,7 +17,49 @@ const props = withDefaults(
 );
 
 const settingsStore = useSettingsStore();
+const navBarStore = useNavBarStore();
+const sidebarStore = useSidebarStore();
 const frameEl = ref<HTMLIFrameElement | null>(null);
+
+/*
+ * Embedded sites open in an iframe inside Directito. Both sidebars (left nav +
+ * right sidebar) are collapsed on entry to give the frame maximum width and
+ * restored on leave, so the user's previous preference is preserved. Only
+ * sidebars that were open before are reopened — a sidebar the user opened
+ * manually while on the embedded page is never force-closed.
+ */
+let prevNavCollapsed: boolean | null = null;
+let prevSidebarCollapsed: boolean | null = null;
+
+function collapseBothForEmbedded() {
+	if (prevNavCollapsed === null) prevNavCollapsed = navBarStore.collapsed;
+	if (prevSidebarCollapsed === null) prevSidebarCollapsed = sidebarStore.collapsed;
+
+	navBarStore.collapse();
+	sidebarStore.collapse();
+}
+
+function restoreBothAfterEmbedded() {
+	// Restore what was open before entering. A sidebar the user opened manually
+	// while on the embedded page is kept open (expand is a no-op when already
+	// open, and a previously-closed sidebar is never force-closed here).
+	if (prevNavCollapsed === false) navBarStore.expand();
+	if (prevSidebarCollapsed === false) sidebarStore.expand();
+
+	prevNavCollapsed = null;
+	prevSidebarCollapsed = null;
+}
+
+onMounted(collapseBothForEmbedded);
+
+// Same component instance is reused when switching between embedded sites
+// (`/embedded/a` → `/embedded/b`): keep both sidebars collapsed.
+watch(
+	() => props.siteId,
+	() => collapseBothForEmbedded(),
+);
+
+onUnmounted(restoreBothAfterEmbedded);
 
 const site = computed<SettingsModuleBarLink | null>(() => {
 	if (!props.siteId || !settingsStore.settings?.module_bar) return null;

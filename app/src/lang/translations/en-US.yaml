@@ -1607,6 +1607,10 @@ fields:
     project_url: Project URL
     homepage_path: Homepage Path
     homepage_path_note: 'Internal Data Studio path to open after login. Examples: /content or /embedded/site-id'
+    homepage_navbar_open: Open left navigation after login
+    homepage_navbar_open_note: 'When enabled, the left navigation is expanded after login. When disabled, it starts collapsed.'
+    homepage_sidebar_open: Open right sidebar after login
+    homepage_sidebar_open_note: 'When enabled, the right sidebar is expanded after login. When disabled, it starts collapsed.'
     project_color: Project Color
     project_logo: Project Logo
     default_language: Default Language
