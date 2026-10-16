@@ -10,7 +10,7 @@ needed by UMA deployments.
 Published image:
 
 ```text
-docker.io/umappsnet/directito
+cr.umapps.net/umapps/directito
 ```
 
 The release workflow publishes a multi-architecture image for:
@@ -203,13 +203,13 @@ v11.17.4-directito.1
 Expected Docker image tag:
 
 ```text
-docker.io/umappsnet/directito:11.17.4-directito.1
+cr.umapps.net/umapps/directito:11.17.4-directito.1
 ```
 
 Because this is a prerelease-style semver tag, the workflow may also publish:
 
 ```text
-docker.io/umappsnet/directito:canary
+cr.umapps.net/umapps/directito:canary
 ```
 
 Use the explicit version tag in production.
@@ -220,20 +220,20 @@ The release workflow requires:
 
 ```text
 Repository variable:
-DOCKERHUB_USERNAME
+CR_REGISTRY_USERNAME
 
 Repository secret:
-DOCKERHUB_PASSWORD
+CR_REGISTRY_PASSWORD
 ```
 
-`DOCKERHUB_PASSWORD` should be a Docker Hub access token, not the account password.
+`CR_REGISTRY_PASSWORD` should be a registry access token, not the account password.
 
 ## Production usage
 
 Pin the image version explicitly:
 
 ```yaml
-image: umappsnet/directito:11.17.4-directito.1
+image: cr.umapps.net/umapps/directito:11.17.4-directito.1
 ```
 
 Avoid using `latest` in production.

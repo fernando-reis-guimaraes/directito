@@ -7,7 +7,7 @@ tag="v${base_version}-directito.${timestamp}"
 image_tag="${base_version}-directito.${timestamp}"
 branch="$(git branch --show-current)"
 remote_url="$(git remote get-url origin)"
-docker_image="docker.io/umappsnet/directito:${image_tag}"
+docker_image="cr.umapps.net/umapps/directito:${image_tag}"
 
 if [ -z "${branch}" ]; then
   echo "Error: detached HEAD. Checkout a branch before releasing." >&2
@@ -76,4 +76,4 @@ echo "Expected Docker image:"
 echo "${docker_image}"
 echo
 echo "Because this is a prerelease tag, the workflow may also publish:"
-echo "docker.io/umappsnet/directito:canary"
+echo "cr.umapps.net/umapps/directito:canary"
